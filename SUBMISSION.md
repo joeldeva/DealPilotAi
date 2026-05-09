@@ -16,7 +16,7 @@ DealPilot AI is an autonomous deal intelligence agent that researches second-han
 
 DealPilot AI helps users buy smarter and safer on second-hand marketplaces. A user enters a goal such as "Find me a used iPhone 14 under INR 45,000." The agent parses the intent, searches marketplace-style listings, normalizes the data, scores deal quality, detects scam risk signals, ranks the best options, and drafts a seller-specific negotiation message.
 
-The MVP is built as a full-stack mock-safe demo. It works without API keys and avoids external API usage by default. The system includes a credit-safe Apify adapter for future live listing collection, a local Zynd AI agent card for identity and discoverability, Superplane-style local workflow events for production-readiness, and an optional Gemini enhancement path that is disabled unless explicitly confirmed.
+The MVP is built as a full-stack protected real-data demo. The hosted version uses Apify live/cache mode for marketplace collection, keeps max items capped, and keeps Gemini disabled unless explicitly confirmed. The system includes a credit-safe Apify adapter, a local Zynd AI agent card plus Zynd-ready service wrapper, Superplane-style local workflow events for production-readiness, and an optional Gemini enhancement path.
 
 ## Problem Solved
 
@@ -49,7 +49,7 @@ Apify is implemented as the marketplace intelligence layer. The backend includes
 - max item cap
 - cache miss
 
-The default demo uses mock data and does not call Apify.
+The hosted final demo uses Apify live/cache mode. If a live actor fails, the backend falls back safely so the demo remains stable.
 
 ## Zynd AI Integration
 

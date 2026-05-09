@@ -44,7 +44,7 @@ The prototype then:
 6. Ranks the strongest opportunities.
 7. Drafts ethical negotiation messages.
 
-The current hackathon prototype runs in mock-safe demo mode by default, so it works without API keys and avoids accidental credit usage.
+The hosted hackathon prototype now runs in protected real-data mode: it requests Apify marketplace results with a 10-item cap, then reuses cache for repeat demos. If a live actor fails, the fallback keeps the app stable.
 
 ## Sponsor Integrations
 
@@ -55,13 +55,13 @@ Apify is the core marketplace intelligence layer for crawling and extracting lis
 Implemented in the prototype:
 
 - credit-safe Apify adapter
-- live mode disabled by default
+- live mode enabled for the hosted final demo
 - manual confirmation required
 - max item cap
 - local cache fallback
 - mock fallback when live conditions are not met
 
-The demo uses mock listings by default. A future controlled live run can use Apify after explicit environment setup and UI confirmation.
+The hosted demo has completed a controlled live Apify run and can replay the result through cache.
 
 ### Zynd AI
 
@@ -142,7 +142,7 @@ The broader opportunity is buyer-side decision support: helping users understand
 - full-stack prototype
 - Vercel Services deployment config
 - polished one-page demo dashboard
-- mock-safe demo flow
+- protected real-data demo flow
 - deterministic agent pipeline
 - ranked marketplace-style results
 - risk signal detection
@@ -165,4 +165,4 @@ The broader opportunity is buyer-side decision support: helping users understand
 
 ## Copy-Paste Short Submission
 
-DealPilot AI by Neural Negotiators is an autonomous deal intelligence agent for second-hand marketplace purchases. A user enters a goal like "Find me a used iPhone 14 under INR 45,000," and the prototype runs an agentic workflow that searches demo listings, analyzes deal quality, detects risk signals, ranks the best opportunities, and drafts ethical negotiation messages. Apify is implemented as the controlled marketplace intelligence layer, Zynd AI is represented through a local agent card plus a Zynd-ready service package, Superplane is represented through local event traces and a workflow canvas export, and GitHub Copilot is represented as the development accelerator. The MVP is mock-safe by default, works without API keys, and clearly shows that no external credits are consumed in demo mode.
+DealPilot AI by Neural Negotiators is an autonomous deal intelligence agent for second-hand marketplace purchases. A user enters a goal like "Find me a used iPhone 14 under INR 45,000," and the prototype runs an agentic workflow that retrieves Apify marketplace results, analyzes deal quality, detects risk signals, ranks the best opportunities, and drafts ethical negotiation messages. Apify is implemented as the controlled marketplace intelligence layer with live/cache evidence, Zynd AI is represented through a local agent card plus a Zynd-ready service package, Superplane is represented through local event traces and a workflow canvas export, and GitHub Copilot is represented as the development accelerator.

@@ -3,11 +3,11 @@
 ## Before the Demo
 
 - Keep `.env.example` safe:
-  - `APIFY_LIVE_MODE=false`
+  - `APIFY_LIVE_MODE=true` for the hosted final demo
   - `GEMINI_LIVE_MODE=false`
   - `ZYND_ENABLED=false`
   - `SUPERPLANE_ENABLED=false`
-- Do not enable live Apify unless the team deliberately chooses one controlled live run.
+- Use one controlled live Apify run, then rely on Apify cache for repeat demos.
 - Do not enable Gemini during the default demo.
 - Confirm frontend dependencies are installed.
 - Confirm backend virtual environment is ready.
@@ -112,9 +112,9 @@ Expected:
    - DealPilot AI
    - Autonomous Deal Intelligence & Negotiation Agent
 3. Point to data mode:
-   - Mock-safe mode
-   - No credits consumed
-   - live Apify off
+   - Real-data mode
+   - Apify live/cache enabled
+   - max items capped at 10
    - Gemini off
 4. Click `Used iPhone 14 under INR 45,000`.
 5. Show agent workflow timeline.
@@ -134,7 +134,7 @@ Expected:
 
 "DealPilot AI is a buyer-side agent for second-hand marketplaces. It takes a buying goal and runs an agentic workflow: intent understanding, marketplace search, deal analysis, scam risk signal detection, decision ranking, and negotiation strategy."
 
-"The prototype is mock-safe by default, so it works without API keys and consumes no credits during the demo."
+"The hosted prototype uses protected real-data mode: Apify live data on the controlled first run, then cache replay for repeat demos. Gemini, Zynd API calls, and Superplane API calls remain off."
 
 "Apify is the controlled marketplace intelligence layer. Zynd AI is represented through a local agent card and a Zynd-ready service wrapper for deployer-based discovery. Superplane is represented through local workflow events and a canvas export. GitHub Copilot accelerated the build."
 
@@ -185,7 +185,7 @@ Before presenting, confirm the credit-safety panel shows:
 - LLM called: `false`
 - Zynd called: `false`
 - Superplane called: `false`
-- Source: `Mock fallback`
+- Source: `Apify live` on the controlled first run or `Apify cache` on replay
 
 ## Final Pre-Submission Checks
 
