@@ -1,0 +1,17 @@
+reference-repos/
+.run-logs/
+.git/
+.venv/
+venv/
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/test-results/
+frontend/*.tsbuildinfo
+backend/.venv/
+backend/.env
+backend/app/data/audit/*.jsonl
+backend/app/data/cache/*.json
+backend/app/data/*.sqlite
+backend/app/data/*.sqlite3
+*.log

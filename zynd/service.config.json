@@ -1,0 +1,19 @@
+{
+  "name": "DealPilot AI",
+  "description": "Autonomous deal intelligence and negotiation service for second-hand marketplace purchases.",
+  "category": "commerce",
+  "tags": [
+    "marketplace",
+    "deal-analysis",
+    "scam-risk-detection",
+    "negotiation",
+    "apify",
+    "hackathon"
+  ],
+  "summary": "Analyzes second-hand marketplace buying goals and returns ranked deal recommendations with risk signals, safety advice, and ethical negotiation drafts.",
+  "webhook_port": 5020,
+  "service_endpoint": null,
+  "openapi_url": null,
+  "entity_index": 0,
+  "entity_pricing": null
+}

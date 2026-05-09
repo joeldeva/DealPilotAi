@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tsbuildinfo
+test-results/
+playwright-report/
+
+# Local files
+.DS_Store
+Thumbs.db
+*.log
+.run-logs/
+reference-repos/
+.vercel/
+*.sqlite
+*.sqlite3
+backend/app/data/audit/*.jsonl
+backend/app/data/cache/*.json

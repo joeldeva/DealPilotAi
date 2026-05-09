@@ -1,0 +1,23 @@
+{
+  "name": "DealPilot AI",
+  "description": "Autonomous deal intelligence and negotiation service for second-hand marketplace purchases.",
+  "version": "0.1.0",
+  "status": "zynd_ready",
+  "capabilities": [
+    "marketplace_search",
+    "deal_analysis",
+    "scam_risk_detection",
+    "decision_ranking",
+    "negotiation_strategy"
+  ],
+  "endpoints": [
+    "/webhook/sync",
+    "/health"
+  ],
+  "sponsor_integration": "Zynd AI service identity and discoverability layer",
+  "credit_safety": {
+    "apify_called_by_default": false,
+    "llm_called_by_default": false,
+    "requires_manual_deployment": true
+  }
+}

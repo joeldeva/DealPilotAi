@@ -1,0 +1,179 @@
+{
+  "products": [
+    {
+      "key": "iphone14",
+      "label": "Used iPhone 14",
+      "goal": "Find me a used iPhone 14 under INR 45000",
+      "listings": [
+        {
+          "id": "iphone14_001",
+          "title": "iPhone 14 128GB Blue with bill",
+          "price": 42000,
+          "currency": "INR",
+          "location": "Indiranagar, Bengaluru",
+          "description": "Single owner phone with bill, box, cable, and clean battery health. Minor case marks only. Inspection welcome before payment.",
+          "seller_name": "Amit",
+          "seller_rating": 4.7,
+          "image_url": "gradient://iphone-blue",
+          "listing_url": "https://example.invalid/dealpilot/iphone14-001",
+          "source": "mock_marketplace",
+          "condition": "good",
+          "posted_time": "2 hours ago",
+          "data_source": "mock_fallback",
+          "product_key": "iphone14"
+        },
+        {
+          "id": "iphone14_002",
+          "title": "iPhone 14 excellent condition",
+          "price": 46500,
+          "currency": "INR",
+          "location": "Koramangala, Bengaluru",
+          "description": "Excellent condition, no scratches, original box and charging cable included. Bill available, selling after upgrade.",
+          "seller_name": "Nisha",
+          "seller_rating": 4.9,
+          "image_url": "gradient://iphone-silver",
+          "listing_url": "https://example.invalid/dealpilot/iphone14-002",
+          "source": "mock_marketplace",
+          "condition": "excellent",
+          "posted_time": "1 day ago",
+          "data_source": "mock_fallback",
+          "product_key": "iphone14"
+        },
+        {
+          "id": "iphone14_003",
+          "title": "iPhone 14 urgent sale only today",
+          "price": 28500,
+          "currency": "INR",
+          "location": "Remote seller",
+          "description": "Urgent sale only today. Pay advance to block. No bill, phone working fine.",
+          "seller_name": "QuickDeals",
+          "seller_rating": 2.8,
+          "image_url": "gradient://risk-red",
+          "listing_url": "https://example.invalid/dealpilot/iphone14-003",
+          "source": "mock_marketplace",
+          "condition": "fair",
+          "posted_time": "20 minutes ago",
+          "data_source": "mock_fallback",
+          "product_key": "iphone14"
+        }
+      ]
+    },
+    {
+      "key": "ps5",
+      "label": "Used PS5",
+      "goal": "Find me a used PS5 under INR 35000",
+      "listings": [
+        {
+          "id": "ps5_001",
+          "title": "PS5 Disc Edition with two controllers",
+          "price": 33500,
+          "currency": "INR",
+          "location": "Andheri West, Mumbai",
+          "description": "Disc edition console, two controllers, bill copy, HDMI cable, and three games. Console is clean and can be tested before purchase.",
+          "seller_name": "Rohan",
+          "seller_rating": 4.5,
+          "image_url": "gradient://ps5-white",
+          "listing_url": "https://example.invalid/dealpilot/ps5-001",
+          "source": "mock_marketplace",
+          "condition": "good",
+          "posted_time": "4 hours ago",
+          "data_source": "mock_fallback",
+          "product_key": "ps5"
+        },
+        {
+          "id": "ps5_002",
+          "title": "PlayStation 5 like new",
+          "price": 39000,
+          "currency": "INR",
+          "location": "Bandra, Mumbai",
+          "description": "Like new PS5 used rarely. One controller, original box, no bill available because it was a gift.",
+          "seller_name": "Meera",
+          "seller_rating": 4.2,
+          "image_url": "gradient://ps5-dark",
+          "listing_url": "https://example.invalid/dealpilot/ps5-002",
+          "source": "mock_marketplace",
+          "condition": "like new",
+          "posted_time": "yesterday",
+          "data_source": "mock_fallback",
+          "product_key": "ps5"
+        },
+        {
+          "id": "ps5_003",
+          "title": "PS5 cheap urgent need money",
+          "price": 21000,
+          "currency": "INR",
+          "location": "Unknown",
+          "description": "Need money urgent sale. Pay advance and courier possible. No testing.",
+          "seller_name": "Seller104",
+          "seller_rating": null,
+          "image_url": "gradient://risk-orange",
+          "listing_url": "https://example.invalid/dealpilot/ps5-003",
+          "source": "mock_marketplace",
+          "condition": "good",
+          "posted_time": "10 minutes ago",
+          "data_source": "mock_fallback",
+          "product_key": "ps5"
+        }
+      ]
+    },
+    {
+      "key": "macbook",
+      "label": "Used MacBook",
+      "goal": "Find me a used MacBook under INR 60000",
+      "listings": [
+        {
+          "id": "macbook_001",
+          "title": "MacBook Air M1 8GB 256GB",
+          "price": 54500,
+          "currency": "INR",
+          "location": "HSR Layout, Bengaluru",
+          "description": "MacBook Air M1 with original charger, bill, clean display, and 91 percent battery health. Used for office work only.",
+          "seller_name": "Devika",
+          "seller_rating": 4.8,
+          "image_url": "gradient://macbook-space-gray",
+          "listing_url": "https://example.invalid/dealpilot/macbook-001",
+          "source": "mock_marketplace",
+          "condition": "good",
+          "posted_time": "3 hours ago",
+          "data_source": "mock_fallback",
+          "product_key": "macbook"
+        },
+        {
+          "id": "macbook_002",
+          "title": "MacBook Air M1 mint condition",
+          "price": 62500,
+          "currency": "INR",
+          "location": "Whitefield, Bengaluru",
+          "description": "Mint condition, very lightly used, box and charger included. Bill available. Price is slightly negotiable for immediate pickup.",
+          "seller_name": "Arjun",
+          "seller_rating": 4.6,
+          "image_url": "gradient://macbook-silver",
+          "listing_url": "https://example.invalid/dealpilot/macbook-002",
+          "source": "mock_marketplace",
+          "condition": "excellent",
+          "posted_time": "2 days ago",
+          "data_source": "mock_fallback",
+          "product_key": "macbook"
+        },
+        {
+          "id": "macbook_003",
+          "title": "MacBook needs repair no bill",
+          "price": 33000,
+          "currency": "INR",
+          "location": "Electronic City, Bengaluru",
+          "description": "MacBook turns on but keyboard has issues. No bill. Repair needed. Only today price.",
+          "seller_name": "LaptopHub",
+          "seller_rating": 3.1,
+          "image_url": "gradient://risk-purple",
+          "listing_url": "https://example.invalid/dealpilot/macbook-003",
+          "source": "mock_marketplace",
+          "condition": "needs repair",
+          "posted_time": "45 minutes ago",
+          "data_source": "mock_fallback",
+          "product_key": "macbook"
+        }
+      ]
+    }
+  ]
+}
+
