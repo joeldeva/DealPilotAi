@@ -1,5 +1,6 @@
 import hashlib
 import json
+import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -9,8 +10,17 @@ from app.models.listing import Listing
 from app.services.mock_data_service import MockDataService, detect_product_key
 
 
-CACHE_DIR = Path(__file__).resolve().parents[1] / "data" / "cache"
-AUDIT_DIR = Path(__file__).resolve().parents[1] / "data" / "audit"
+def _runtime_data_dir() -> Path:
+    configured = os.getenv("DEALPILOT_RUNTIME_DATA_DIR")
+    if configured:
+        return Path(configured)
+    if os.getenv("VERCEL"):
+        return Path("/tmp/dealpilot-ai")
+    return Path(__file__).resolve().parents[1] / "data"
+
+
+CACHE_DIR = _runtime_data_dir() / "cache"
+AUDIT_DIR = _runtime_data_dir() / "audit"
 AUDIT_PATH = AUDIT_DIR / "apify_live_runs.jsonl"
 HARD_MAX_ITEMS = 20
 

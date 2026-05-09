@@ -28,3 +28,5 @@ reference-repos/
 *.sqlite3
 backend/app/data/audit/*.jsonl
 backend/app/data/cache/*.json
+
+.vercel

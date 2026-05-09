@@ -1,5 +1,6 @@
 import json
 import hashlib
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -9,7 +10,16 @@ from urllib.request import Request, urlopen
 from app.config import get_settings
 
 
-AUDIT_DIR = Path(__file__).resolve().parents[1] / "data" / "audit"
+def _runtime_data_dir() -> Path:
+    configured = os.getenv("DEALPILOT_RUNTIME_DATA_DIR")
+    if configured:
+        return Path(configured)
+    if os.getenv("VERCEL"):
+        return Path("/tmp/dealpilot-ai")
+    return Path(__file__).resolve().parents[1] / "data"
+
+
+AUDIT_DIR = _runtime_data_dir() / "audit"
 GEMINI_AUDIT_PATH = AUDIT_DIR / "gemini_calls.jsonl"
 
 

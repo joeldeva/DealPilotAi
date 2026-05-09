@@ -1,4 +1,5 @@
 import json
+import os
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -8,7 +9,16 @@ from uuid import uuid4
 from app.models.api import DealReportSummary, FullRunResponse
 
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+def _runtime_data_dir() -> Path:
+    configured = os.getenv("DEALPILOT_RUNTIME_DATA_DIR")
+    if configured:
+        return Path(configured)
+    if os.getenv("VERCEL"):
+        return Path("/tmp/dealpilot-ai")
+    return Path(__file__).resolve().parents[1] / "data"
+
+
+DATA_DIR = _runtime_data_dir()
 DB_PATH = DATA_DIR / "dealpilot.sqlite3"
 
 
