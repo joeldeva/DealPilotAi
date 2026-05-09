@@ -4,8 +4,7 @@ This file is intentionally separate from the main FastAPI app. It is meant for
 manual deployment through the Zynd deployer with a service keypair.
 
 No Zynd API call happens by importing this file. Running it directly starts a
-Zynd service process, which should only be done during an intentional Zynd
-deployment/test.
+small HTTP service for intentional Zynd deployment/test.
 """
 
 from __future__ import annotations
@@ -15,7 +14,7 @@ import os
 from typing import Any
 
 import requests
-from zyndai_agent.service import ServiceConfig, ZyndService
+from flask import Flask, jsonify, request
 
 
 DEFAULT_GOAL = "Find me a used iPhone 14 under INR 45000"
@@ -104,7 +103,7 @@ def _summarize_dealpilot_response(response: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def handle_request(input_text: str) -> str:
+def handle_request(input_text: str) -> dict[str, Any]:
     """Handle a Zynd service invocation.
 
     The wrapper calls the deployed DealPilot backend only when invoked by a
@@ -116,20 +115,18 @@ def handle_request(input_text: str) -> str:
     api_base = _dealpilot_api_base()
 
     if not api_base:
-        return json.dumps(
-            {
-                "service": "DealPilot AI",
-                "mode": "zynd_service_wrapper_not_connected",
-                "message": "Set DEALPILOT_API_BASE_URL to the hosted FastAPI backend before invoking the service.",
-                "received_goal": user_goal,
-                "credit_safety": {
-                    "apify_called": False,
-                    "llm_called": False,
-                    "zynd_called": True,
-                    "superplane_called": False,
-                },
-            }
-        )
+        return {
+            "service": "DealPilot AI",
+            "mode": "zynd_service_wrapper_not_connected",
+            "message": "Set DEALPILOT_API_BASE_URL to the hosted FastAPI backend before invoking the service.",
+            "received_goal": user_goal,
+            "credit_safety": {
+                "apify_called": False,
+                "llm_called": False,
+                "zynd_called": True,
+                "superplane_called": False,
+            },
+        }
 
     try:
         response = requests.post(
@@ -138,49 +135,78 @@ def handle_request(input_text: str) -> str:
             timeout=25,
         )
         response.raise_for_status()
-        return json.dumps(_summarize_dealpilot_response(response.json()))
+        return _summarize_dealpilot_response(response.json())
     except Exception as exc:
-        return json.dumps(
-            {
-                "service": "DealPilot AI",
-                "mode": "zynd_service_wrapper_error",
-                "error": str(exc),
-                "received_goal": user_goal,
-                "credit_safety": {
-                    "apify_called": False,
-                    "llm_called": False,
-                    "zynd_called": True,
-                    "superplane_called": False,
-                },
-            }
-        )
+        return {
+            "service": "DealPilot AI",
+            "mode": "zynd_service_wrapper_error",
+            "error": str(exc),
+            "received_goal": user_goal,
+            "credit_safety": {
+                "apify_called": False,
+                "llm_called": False,
+                "zynd_called": True,
+                "superplane_called": False,
+            },
+        }
+
+
+app = Flask(__name__)
+
+
+def _agent_card() -> dict[str, Any]:
+    base_url = os.getenv("ZYND_ENTITY_URL", "").rstrip("/")
+    return {
+        "name": "DealPilot AI",
+        "description": "Autonomous deal intelligence and negotiation service for second-hand marketplace purchases.",
+        "version": "0.1.0",
+        "category": "commerce",
+        "tags": ["marketplace", "deal-analysis", "scam-risk-detection", "negotiation", "apify"],
+        "capabilities": [
+            "marketplace_search",
+            "deal_analysis",
+            "scam_risk_detection",
+            "decision_ranking",
+            "negotiation_strategy",
+        ],
+        "endpoints": {
+            "health": f"{base_url}/health" if base_url else "/health",
+            "sync": f"{base_url}/webhook/sync" if base_url else "/webhook/sync",
+            "agent_card": f"{base_url}/.well-known/agent.json" if base_url else "/.well-known/agent.json",
+        },
+        "service_type": "zynd_deployer_http_service",
+        "pricing": None,
+    }
+
+
+@app.get("/")
+def root() -> Any:
+    return jsonify({"service": "DealPilot AI", "status": "running", "invoke": "/webhook/sync"})
+
+
+@app.get("/health")
+def health() -> Any:
+    return jsonify({"status": "ok", "service": "DealPilot AI"})
+
+
+@app.get("/.well-known/agent.json")
+@app.get("/.well-known/agent-card.json")
+def agent_card() -> Any:
+    return jsonify(_agent_card())
+
+
+@app.post("/webhook/sync")
+def webhook_sync() -> Any:
+    payload = request.get_json(silent=True) or {}
+    if isinstance(payload, dict):
+        content = payload.get("content") or payload.get("user_goal") or payload.get("goal") or json.dumps(payload)
+    else:
+        content = str(payload)
+    return jsonify(handle_request(str(content)))
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("ZYND_WEBHOOK_PORT", os.getenv("PORT", "5020")))
-    entity_url = os.getenv("ZYND_ENTITY_URL")
-
-    config = ServiceConfig(
-        name="DealPilot AI",
-        description="Autonomous deal intelligence and negotiation service for second-hand marketplace purchases.",
-        category="commerce",
-        tags=["marketplace", "deal-analysis", "negotiation", "risk-signals", "apify"],
-        summary="Analyzes second-hand marketplace buying goals and returns ranked deal recommendations with risk signals and negotiation drafts.",
-        service_endpoint=entity_url,
-        openapi_url=None,
-        webhook_host="0.0.0.0",
-        webhook_port=port,
-        registry_url=os.getenv("ZYND_REGISTRY_URL", "https://zns01.zynd.ai"),
-        entity_pricing=None,
-    )
-
-    service = ZyndService(config)
-    service.set_handler(handle_request)
-
-    print(f"DealPilot AI Zynd service running on port {port}")
+    port = int(os.getenv("PORT", os.getenv("ZYND_WEBHOOK_PORT", "5000")))
+    print(f"DealPilot AI Zynd HTTP service running on port {port}")
     print("Use /webhook/sync with a buying goal to invoke the service.")
-
-    while True:
-        command = input()
-        if command.strip().lower() == "exit":
-            break
+    app.run(host="0.0.0.0", port=port)

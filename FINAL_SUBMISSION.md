@@ -72,11 +72,16 @@ Implemented in the prototype:
 - local DealPilot agent card
 - capability list
 - local endpoints for agent metadata
-- SDK-ready adapter boundary
+- deployed Zynd service wrapper at `https://deployer.zynd.ai/service/dealpilot-ai-79621b`
+- callable `/webhook/sync` endpoint that returns DealPilot recommendations to external agents
 
-Future scope:
+Successful Zynd proof:
 
-- register DealPilot as a discoverable service through Zynd when credentials and deployment are configured.
+- input: `Find me a used iPhone 14 under INR 45000`
+- response mode: `zynd_service_wrapper`
+- data source: `apify_live`
+- returned best listing, recommendation score, risk score, negotiation draft, and seller questions
+- `credit_safety.zynd_called=true`
 
 ### Superplane
 
@@ -150,7 +155,7 @@ The broader opportunity is buyer-side decision support: helping users understand
 - credit-safety panel
 - Apify live-mode guardrails
 - Zynd local agent card
-- Zynd-ready service deployment package
+- deployed Zynd service wrapper
 - Superplane-style local event trace
 - Superplane-style local canvas export
 - final documentation and demo script
@@ -165,4 +170,4 @@ The broader opportunity is buyer-side decision support: helping users understand
 
 ## Copy-Paste Short Submission
 
-DealPilot AI by Neural Negotiators is an autonomous deal intelligence agent for second-hand marketplace purchases. A user enters a goal like "Find me a used iPhone 14 under INR 45,000," and the prototype runs an agentic workflow that retrieves Apify marketplace results, analyzes deal quality, detects risk signals, ranks the best opportunities, and drafts ethical negotiation messages. Apify is implemented as the controlled marketplace intelligence layer with live/cache evidence, Zynd AI is represented through a local agent card plus a Zynd-ready service package, Superplane is represented through local event traces and a workflow canvas export, and GitHub Copilot is represented as the development accelerator.
+DealPilot AI by Neural Negotiators is an autonomous deal intelligence agent for second-hand marketplace purchases. A user enters a goal like "Find me a used iPhone 14 under INR 45,000," and the prototype runs an agentic workflow that retrieves Apify marketplace results, analyzes deal quality, detects risk signals, ranks the best opportunities, and drafts ethical negotiation messages. Apify is implemented as the controlled marketplace intelligence layer with live/cache evidence, Zynd AI is represented through a local agent card plus a deployed callable service wrapper, Superplane is represented through local event traces and a workflow canvas export, and GitHub Copilot is represented as the development accelerator.

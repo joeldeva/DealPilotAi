@@ -93,6 +93,22 @@ This means Zynd calls can demonstrate real marketplace collection when Apify is 
 6. Wait for `/health` to return 200.
 7. Invoke `/webhook/sync` with a buying goal.
 
+## Deployed Service Proof
+
+Current deployed Zynd service:
+
+```text
+https://deployer.zynd.ai/service/dealpilot-ai-79621b
+```
+
+It exposes:
+
+- `GET /health`
+- `GET /.well-known/agent.json`
+- `POST /webhook/sync`
+
+The tested `/webhook/sync` invocation returned `mode=zynd_service_wrapper`, `data_source=apify_live`, a best listing, recommendation score, risk score, negotiation draft, seller questions, and `credit_safety.zynd_called=true`.
+
 ## Demo Pitch Line
 
-DealPilot AI exposes a Zynd-ready service wrapper so other agents can discover and invoke it as a buyer-side marketplace intelligence service. The default Zynd path remains mock-safe and does not trigger Apify or Gemini quota.
+DealPilot AI exposes a deployed Zynd service wrapper so other agents can discover and invoke it as a buyer-side marketplace intelligence service. The wrapper calls the hosted DealPilot backend and can return Apify-backed deal intelligence while Gemini remains disabled by default.

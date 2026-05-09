@@ -63,6 +63,45 @@ Do not upload:
 - `__pycache__`
 - `node_modules`
 
+## Deployed Service Proof
+
+Current deployed Zynd service:
+
+```text
+https://deployer.zynd.ai/service/dealpilot-ai-79621b
+```
+
+Health/root proof:
+
+```json
+{"invoke":"/webhook/sync","service":"DealPilot AI","status":"running"}
+```
+
+Successful invocation:
+
+```powershell
+$body = @{
+  content = "Find me a used iPhone 14 under INR 45000"
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+  -Uri "https://deployer.zynd.ai/service/dealpilot-ai-79621b/webhook/sync" `
+  -Method POST `
+  -ContentType "application/json" `
+  -Body $body
+```
+
+Observed response included:
+
+- `mode=zynd_service_wrapper`
+- `data_source=apify_live`
+- best listing
+- `deal_score=85`
+- `risk_level=low`
+- negotiation draft
+- seller questions
+- `credit_safety.zynd_called=true`
+
 ## Zynd Deployer Flow
 
 1. Open `https://deployer.zynd.ai`.

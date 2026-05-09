@@ -115,9 +115,15 @@ Implemented as a local agent identity layer. DealPilot exposes:
 - `GET /.well-known/agent.json`
 - `GET /api/zynd/status`
 
-Zynd registration is disabled by default and no Zynd API call is made during the MVP demo.
+The main app exposes local Zynd metadata without calling Zynd on page load. A real Zynd service wrapper is also deployed for judge proof:
 
-A real Zynd-ready service package is available in `zynd/` for manual deployment through `deployer.zynd.ai`. See [ZYND_DEPLOYMENT.md](ZYND_DEPLOYMENT.md). This wrapper is separate from the main app and is not started automatically.
+```text
+https://deployer.zynd.ai/service/dealpilot-ai-79621b
+```
+
+The deployed wrapper accepts `POST /webhook/sync`, calls the hosted DealPilot backend, and returns a compact deal recommendation. A successful test returned `mode=zynd_service_wrapper`, `data_source=apify_live`, a best listing, recommendation scores, negotiation draft, and `credit_safety.zynd_called=true`.
+
+The source package remains in `zynd/`. See [ZYND_DEPLOYMENT.md](ZYND_DEPLOYMENT.md). This wrapper is separate from the main app and is not started automatically by the frontend/backend deployment.
 
 Workshop integration notes are captured in [ZYND_WORKSHOP_INTEGRATION.md](ZYND_WORKSHOP_INTEGRATION.md). The Zynd package follows the service pattern: `service.py`, `service.config.json`, `requirements.txt`, `.well-known/agent.json`, and a separate service keypair upload.
 

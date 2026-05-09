@@ -53,7 +53,15 @@ The hosted final demo uses Apify live/cache mode. If a live actor fails, the bac
 
 ## Zynd AI Integration
 
-DealPilot exposes a local agent card that represents the app as a discoverable autonomous service. The agent card includes capabilities, endpoints, sponsor integration notes, and credit-safety metadata. A Zynd-ready service package is also included for manual deployment through the Zynd deployer. Zynd registration is disabled by default and no Zynd API call is made during the default demo.
+DealPilot exposes a local agent card that represents the app as a discoverable autonomous service. The agent card includes capabilities, endpoints, sponsor integration notes, and credit-safety metadata.
+
+DealPilot also has a deployed Zynd service wrapper:
+
+```text
+https://deployer.zynd.ai/service/dealpilot-ai-79621b
+```
+
+The service accepts `POST /webhook/sync` with a buying goal, invokes the hosted DealPilot backend, and returns a compact recommendation with best listing, deal score, risk score, negotiation target, seller questions, and credit-safety flags. A successful invocation returned `data_source=apify_live`, `mode=zynd_service_wrapper`, and `credit_safety.zynd_called=true`.
 
 ## Superplane Integration
 
