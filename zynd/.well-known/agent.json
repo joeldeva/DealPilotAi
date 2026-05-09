@@ -3,6 +3,15 @@
   "description": "Autonomous deal intelligence and negotiation service for second-hand marketplace purchases.",
   "version": "0.1.0",
   "status": "zynd_ready",
+  "category": "commerce",
+  "tags": [
+    "marketplace",
+    "deal-analysis",
+    "risk-signals",
+    "negotiation",
+    "apify"
+  ],
+  "summary": "Buyer-side marketplace agent that ranks used-product deals, detects risk signals, and drafts ethical negotiation strategies.",
   "capabilities": [
     "marketplace_search",
     "deal_analysis",
@@ -10,10 +19,17 @@
     "decision_ranking",
     "negotiation_strategy"
   ],
-  "endpoints": [
-    "/webhook/sync",
-    "/health"
-  ],
+  "endpoints": {
+    "invoke": "/webhook/sync",
+    "invoke_async": "/webhook",
+    "health": "/health",
+    "agent_card": "/.well-known/agent.json"
+  },
+  "pricing": {
+    "model": "free_demo",
+    "currency": "USD",
+    "per_call": "$0.00"
+  },
   "sponsor_integration": "Zynd AI service identity and discoverability layer",
   "credit_safety": {
     "apify_called_by_default": false,

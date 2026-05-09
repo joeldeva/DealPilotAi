@@ -1,4 +1,5 @@
 import importlib.util
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,14 @@ ENDPOINTS = [
     "/api/negotiate",
 ]
 
+ZYND_TAGS = [
+    "marketplace",
+    "deal-analysis",
+    "risk-signals",
+    "negotiation",
+    "apify",
+]
+
 
 class ZyndService:
     """Local Zynd-style identity boundary.
@@ -33,6 +42,7 @@ class ZyndService:
         self.called = False
 
     def get_local_agent_card(self) -> dict[str, Any]:
+        service_base = "https://dealpilot-ai-phi.vercel.app/server"
         return {
             "name": self.settings.zynd_agent_name,
             "description": (
@@ -40,12 +50,33 @@ class ZyndService:
             ),
             "version": "0.1.0",
             "status": "local_mock",
+            "category": "commerce",
+            "tags": ZYND_TAGS,
+            "summary": "Buyer-side marketplace agent that ranks used-product deals, detects risk signals, and drafts ethical negotiation strategies.",
             "capabilities": CAPABILITIES,
-            "endpoints": ENDPOINTS,
+            "endpoints": {
+                "dealpilot_full_run": f"{service_base}/api/demo/full-run",
+                "search": f"{service_base}/api/search",
+                "analyze": f"{service_base}/api/analyze",
+                "negotiate": f"{service_base}/api/negotiate",
+                "health": f"{service_base}/health",
+                "agent_card": f"{service_base}/.well-known/agent.json",
+                "zynd_wrapper_sync": "https://<zynd-service>.deployer.zynd.ai/webhook/sync",
+            },
+            "local_backend_endpoints": ENDPOINTS,
+            "pricing": {
+                "model": "free_demo",
+                "currency": "USD",
+                "per_call": "$0.00",
+            },
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "zynd_ready": True,
             "sponsor_integration": "Zynd AI agent identity and discoverability layer",
             "credit_safety": {
                 "zynd_called": False,
                 "requires_manual_enable": True,
+                "service_wrapper_available": True,
+                "deployer_required_for_real_registration": True,
             },
         }
 

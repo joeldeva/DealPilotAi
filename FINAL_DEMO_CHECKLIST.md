@@ -136,7 +136,7 @@ Expected:
 
 "The prototype is mock-safe by default, so it works without API keys and consumes no credits during the demo."
 
-"Apify is the controlled marketplace intelligence layer. Zynd AI is represented through a local agent card. Superplane is represented through local workflow events. GitHub Copilot accelerated the build."
+"Apify is the controlled marketplace intelligence layer. Zynd AI is represented through a local agent card and a Zynd-ready service wrapper for deployer-based discovery. Superplane is represented through local workflow events and a canvas export. GitHub Copilot accelerated the build."
 
 "The risk analysis is a set of risk signals, not a guarantee. The negotiation message is only a draft; DealPilot does not contact sellers."
 

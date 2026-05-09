@@ -13,6 +13,7 @@ zynd/
   requirements.txt
   .env.example
   .well-known/agent.json
+  README.md
 ```
 
 ## How It Works
@@ -64,7 +65,7 @@ Do not upload:
 
 1. Open `https://deployer.zynd.ai`.
 2. Select `Service`.
-3. Upload the `zynd/` folder.
+3. Upload the `zynd/` folder as the project folder.
 4. Upload the service keypair JSON separately.
 5. Deploy.
 6. Wait until `/health` returns 200.
@@ -86,5 +87,6 @@ Normal users use the DealPilot frontend and backend directly. Zynd users or agen
 
 - Local agent card: implemented in the main backend.
 - Zynd-ready service package: implemented in `zynd/`.
+- Hosted DealPilot backend target: `https://dealpilot-ai-phi.vercel.app/server`.
 - Real Zynd deployment: manual step, not run automatically.
 - Zynd API calls from main app: none.

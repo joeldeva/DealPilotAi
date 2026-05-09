@@ -119,6 +119,8 @@ Zynd registration is disabled by default and no Zynd API call is made during the
 
 A real Zynd-ready service package is available in `zynd/` for manual deployment through `deployer.zynd.ai`. See [ZYND_DEPLOYMENT.md](ZYND_DEPLOYMENT.md). This wrapper is separate from the main app and is not started automatically.
 
+Workshop integration notes are captured in [ZYND_WORKSHOP_INTEGRATION.md](ZYND_WORKSHOP_INTEGRATION.md). The Zynd package follows the service pattern: `service.py`, `service.config.json`, `requirements.txt`, `.well-known/agent.json`, and a separate service keypair upload.
+
 ### Superplane
 
 Implemented as local workflow-event simulation. DealPilot emits events for the full pipeline:
@@ -348,6 +350,7 @@ Safety rules:
 - Apify is disabled unless live mode, credentials, and request confirmation are all present.
 - Gemini is disabled unless live mode, API key, use flag, and confirmation are all present.
 - Zynd serves only a local agent card unless explicitly configured later.
+- The Zynd service wrapper invokes DealPilot with live Apify and Gemini disabled by default.
 - Superplane is simulated with local workflow events only.
 - Apify results are cached under `backend/app/data/cache/`.
 - Apify item count is capped by `APIFY_MAX_ITEMS` and hard-capped at 20.

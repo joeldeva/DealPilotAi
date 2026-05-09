@@ -65,10 +65,16 @@ class AgentCard(BaseModel):
     description: str
     version: str
     status: str
+    category: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    summary: str | None = None
     capabilities: list[str]
-    endpoints: list[str]
+    endpoints: Any
+    pricing: dict[str, Any] | None = None
+    updated_at: str | None = None
+    zynd_ready: bool = False
     sponsor_integration: str
-    credit_safety: dict[str, bool]
+    credit_safety: dict[str, Any]
 
 
 class ZyndStatus(BaseModel):

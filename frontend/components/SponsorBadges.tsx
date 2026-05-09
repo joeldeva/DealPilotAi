@@ -2,7 +2,7 @@ import { Bot, Github, Network, Route } from "lucide-react";
 
 const badges = [
   { label: "Apify", detail: "Marketplace intelligence", icon: Network },
-  { label: "Zynd AI", detail: "Agent identity", icon: Bot },
+  { label: "Zynd AI", detail: "Agent identity + service wrapper", icon: Bot },
   { label: "Superplane", detail: "Workflow readiness", icon: Route },
   { label: "GitHub Copilot", detail: "Development acceleration", icon: Github },
 ];
