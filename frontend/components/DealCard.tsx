@@ -11,11 +11,11 @@ export function DealCard({ deal }: DealCardProps) {
   const { listing, deal_analysis, risk_analysis, ranking, negotiation } = deal;
 
   return (
-    <article className="glass-panel rounded-lg p-4">
+    <article className="glass-panel rounded p-4">
       <div className="grid gap-5 xl:grid-cols-[12rem_1fr]">
-        <div className={`min-h-44 rounded-lg ${gradientClass(listing.image_url)} p-4`}>
+        <div className={`min-h-44 rounded ${gradientClass(listing.image_url)} p-4 ring-1 ring-white/10`}>
           <div className="flex h-full flex-col justify-between">
-            <span className="w-fit rounded-full bg-black/[0.28] px-3 py-1 text-xs font-semibold text-white/90">
+            <span className="w-fit rounded bg-black/[0.38] px-3 py-1 text-xs font-semibold text-white/90">
               {listing.data_source}
             </span>
             <div>
@@ -29,7 +29,7 @@ export function DealCard({ deal }: DealCardProps) {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="mb-2 flex flex-wrap gap-2">
-                <span className="rounded-full border border-emerald-300/25 bg-emerald-300/10 px-3 py-1 text-xs font-bold text-emerald-100">
+                <span className="rounded border border-violet-300/25 bg-violet-300/10 px-3 py-1 text-xs font-bold text-violet-100">
                   #{ranking.rank} {ranking.recommendation_label}
                 </span>
                 <RiskBadge level={risk_analysis.risk_level} />
@@ -58,9 +58,9 @@ export function DealCard({ deal }: DealCardProps) {
             <Metric label="Target" value={formatInr(negotiation.target_price)} />
           </div>
 
-          <div className="rounded-lg border border-white/10 bg-white/[0.045] p-4">
+          <div className="rounded border border-violet-400/15 bg-white/[0.035] p-4">
             <div className="mb-2 flex items-center gap-2 text-slate-100">
-              <BadgeCheck size={18} className="text-emerald-300" />
+              <BadgeCheck size={18} className="text-violet-300" />
               <h4 className="font-semibold">Why this rank</h4>
             </div>
             <p className="text-sm leading-6 text-slate-300">{deal_analysis.reasoning}</p>
@@ -71,15 +71,15 @@ export function DealCard({ deal }: DealCardProps) {
                 <Tag key={flag}>{flag.replaceAll("_", " ")}</Tag>
               ))}
               {risk_analysis.risk_flags.slice(0, 4).map((flag) => (
-                <Tag key={flag} tone="amber">
+                <Tag key={flag} tone="fuchsia">
                   {flag.replaceAll("_", " ")}
                 </Tag>
               ))}
             </div>
           </div>
 
-          <div className="rounded-lg border border-amber-300/15 bg-amber-300/[0.08] p-4">
-            <div className="mb-2 flex items-center gap-2 text-amber-100">
+          <div className="rounded border border-fuchsia-300/15 bg-fuchsia-300/[0.08] p-4">
+            <div className="mb-2 flex items-center gap-2 text-fuchsia-100">
               <ShieldCheck size={18} />
               <h4 className="font-semibold">Safety advice</h4>
             </div>
@@ -100,21 +100,21 @@ export function DealCard({ deal }: DealCardProps) {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-black/[0.18] p-3">
+    <div className="rounded border border-violet-400/15 bg-black/[0.22] p-3">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-1 text-sm font-semibold text-white">{value}</p>
     </div>
   );
 }
 
-function Tag({ children, tone = "slate" }: { children: string; tone?: "slate" | "green" | "amber" }) {
+function Tag({ children, tone = "slate" }: { children: string; tone?: "slate" | "green" | "fuchsia" }) {
   const className =
     tone === "green"
-      ? "bg-emerald-300/10 text-emerald-100"
-      : tone === "amber"
-        ? "bg-amber-300/10 text-amber-100"
+      ? "bg-violet-300/10 text-violet-100"
+      : tone === "fuchsia"
+        ? "bg-fuchsia-300/10 text-fuchsia-100"
         : "bg-white/[0.08] text-slate-300";
-  return <span className={`rounded-full px-3 py-1 text-xs ${className}`}>{children}</span>;
+  return <span className={`rounded px-3 py-1 text-xs ${className}`}>{children}</span>;
 }
 
 function formatInr(value: number) {
@@ -131,5 +131,5 @@ function gradientClass(imageUrl: string) {
   if (imageUrl.includes("risk-purple")) return "bg-gradient-to-br from-violet-500 via-fuchsia-800 to-zinc-950";
   if (imageUrl.includes("ps5")) return "bg-gradient-to-br from-slate-100 via-cyan-200 to-blue-800";
   if (imageUrl.includes("macbook")) return "bg-gradient-to-br from-zinc-200 via-stone-500 to-zinc-950";
-  return "bg-gradient-to-br from-sky-400 via-emerald-500 to-slate-950";
+  return "bg-gradient-to-br from-sky-400 via-violet-500 to-slate-950";
 }

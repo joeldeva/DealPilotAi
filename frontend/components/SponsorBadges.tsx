@@ -13,11 +13,11 @@ export function SponsorBadges() {
       {badges.map((badge) => {
         const Icon = badge.icon;
         return (
-          <div key={badge.label} className="glass-panel rounded-lg p-4">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-white/[0.08] text-emerald-200">
+          <div key={badge.label} className="glass-panel rounded p-4 transition hover:border-violet-300/50 hover:bg-violet-500/[0.08]">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded bg-violet-500/15 text-violet-100 ring-1 ring-violet-300/20">
               <Icon size={20} />
             </div>
-            <p className="font-semibold text-white">{badge.label}</p>
+            <p className="zynd-wordmark font-semibold text-white">{badge.label}</p>
             <p className="mt-1 text-sm text-slate-400">{badge.detail}</p>
           </div>
         );

@@ -23,10 +23,10 @@ export function SearchForm({
 }: SearchFormProps) {
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-white/10 bg-white/[0.06] p-2 shadow-2xl shadow-black/20">
+      <div className="rounded border border-violet-400/25 bg-black/35 p-2 shadow-2xl shadow-black/30">
         <div className="flex flex-col gap-2 md:flex-row">
-          <label className="flex min-w-0 flex-1 items-center gap-3 rounded-md bg-black/25 px-4 py-3 ring-1 ring-white/10">
-            <Search className="shrink-0 text-emerald-200" size={20} />
+          <label className="flex min-w-0 flex-1 items-center gap-3 rounded bg-[#0a0610] px-4 py-3 ring-1 ring-violet-400/20">
+            <Search className="shrink-0 text-violet-200" size={20} />
             <input
               value={goal}
               onChange={(event) => onGoalChange(event.target.value)}
@@ -40,7 +40,7 @@ export function SearchForm({
           <button
             onClick={onSubmit}
             disabled={loading || !goal.trim()}
-            className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-300 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded bg-violet-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? <Loader2 className="animate-spin" size={18} /> : <Play size={18} />}
             Run Agent
@@ -54,7 +54,7 @@ export function SearchForm({
             key={item}
             onClick={() => onQuickRun(item)}
             disabled={loading}
-            className="rounded-full border border-white/10 bg-white/[0.07] px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-emerald-200/50 hover:bg-emerald-200/10 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded border border-violet-400/20 bg-violet-400/[0.06] px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-violet-200/50 hover:bg-violet-500/15 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {chipLabels[index] ?? item}
           </button>

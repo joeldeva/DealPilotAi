@@ -4,7 +4,7 @@
 
 :root {
   color-scheme: dark;
-  background: #06070a;
+  background: #020104;
 }
 
 * {
@@ -19,9 +19,12 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(20, 184, 166, 0.22), transparent 32rem),
-    radial-gradient(circle at 80% 10%, rgba(245, 158, 11, 0.16), transparent 26rem),
-    linear-gradient(135deg, #06070a 0%, #0d1117 44%, #10100d 100%);
+    linear-gradient(rgba(139, 92, 246, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(139, 92, 246, 0.045) 1px, transparent 1px),
+    radial-gradient(circle at 17% 0%, rgba(139, 92, 246, 0.3), transparent 30rem),
+    radial-gradient(circle at 83% 12%, rgba(217, 70, 239, 0.2), transparent 24rem),
+    linear-gradient(135deg, #020104 0%, #07020d 45%, #0d0914 100%);
+  background-size: 36px 36px, 36px 36px, auto, auto, auto;
   color: #f8fafc;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
@@ -33,15 +36,33 @@ input {
   font: inherit;
 }
 
+::selection {
+  background: rgba(139, 92, 246, 0.45);
+  color: #ffffff;
+}
+
 .glass-panel {
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  background: rgba(12, 17, 24, 0.7);
-  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(18px);
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  background:
+    linear-gradient(180deg, rgba(24, 18, 34, 0.9), rgba(7, 5, 11, 0.88)),
+    rgba(8, 4, 14, 0.92);
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
 }
 
 .metric-card {
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: rgba(255, 255, 255, 0.035);
 }
 
+.zynd-wordmark {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.zynd-chip {
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  background: rgba(139, 92, 246, 0.12);
+  color: #ddd6fe;
+}

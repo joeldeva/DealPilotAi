@@ -30,8 +30,8 @@ export function DemoTimeline({
 
   return (
     <div className="space-y-3">
-      <div className="rounded-lg border border-emerald-300/15 bg-emerald-300/[0.08] p-3">
-        <p className="text-sm font-semibold text-emerald-100">Superplane-ready local workflow trace</p>
+      <div className="rounded border border-violet-300/20 bg-violet-500/[0.09] p-3">
+        <p className="zynd-wordmark text-sm font-semibold text-violet-100">Superplane-ready local workflow trace</p>
         <p className="mt-1 text-xs leading-5 text-slate-400">
           Event-driven flow is simulated locally. No Superplane service or API is called.
         </p>
@@ -39,14 +39,14 @@ export function DemoTimeline({
 
       {visibleEvents.length ? (
         visibleEvents.map((event) => (
-          <div key={event.id} className="flex gap-3 rounded-lg border border-white/10 bg-white/[0.045] p-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-emerald-300 text-slate-950">
+          <div key={event.id} className="flex gap-3 rounded border border-violet-400/15 bg-white/[0.035] p-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-violet-600 text-white">
               <CheckCircle2 size={17} />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-semibold text-white">{event.event_type.replaceAll("_", " ")}</p>
-                <span className="rounded-full bg-white/[0.08] px-2 py-0.5 text-[11px] text-slate-300">
+                <p className="zynd-wordmark text-sm font-semibold text-white">{event.event_type.replaceAll("_", " ")}</p>
+                <span className="rounded bg-violet-500/15 px-2 py-0.5 text-[11px] text-violet-100">
                   {event.status}
                 </span>
                 <span className="text-xs text-slate-500">{formatTime(event.timestamp)}</span>
@@ -61,18 +61,18 @@ export function DemoTimeline({
           const Icon = item.icon;
           const completed = Boolean(traceItem);
           return (
-            <div key={item.step} className="flex gap-3 rounded-lg border border-white/10 bg-white/[0.045] p-3">
+            <div key={item.step} className="flex gap-3 rounded border border-violet-400/15 bg-white/[0.035] p-3">
               <div
                 className={
                   completed
-                    ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-emerald-300 text-slate-950"
-                    : "flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white/[0.08] text-slate-400"
+                    ? "flex h-9 w-9 shrink-0 items-center justify-center rounded bg-violet-600 text-white"
+                    : "flex h-9 w-9 shrink-0 items-center justify-center rounded bg-white/[0.08] text-slate-400"
                 }
               >
                 {loading && !completed ? <CircleDashed className="animate-spin" size={17} /> : <Icon size={17} />}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-white">{item.label}</p>
+                <p className="zynd-wordmark text-sm font-semibold text-white">{item.label}</p>
                 <p className="mt-1 text-sm leading-5 text-slate-400">{traceItem?.details ?? "Waiting for agent run."}</p>
               </div>
             </div>
