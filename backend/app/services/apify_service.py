@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -410,9 +411,18 @@ class ApifyService:
         if isinstance(value, (int, float)):
             return max(0, int(value))
         text = str(value or "0")
-        digits = "".join(ch if ch.isdigit() else " " for ch in text)
-        numbers = [int(part) for part in digits.split() if part.isdigit()]
-        return max(numbers) if numbers else 0
+        currency_match = re.search(r"(?:₹|INR|Rs\.?)\s*([0-9][0-9,\.\s]*)", text, flags=re.IGNORECASE)
+        if currency_match:
+            amount = re.sub(r"\D", "", currency_match.group(1))
+            if amount:
+                return int(amount)
+
+        comma_amounts = re.findall(r"\d{1,3}(?:,\d{3})+", text)
+        if comma_amounts:
+            return max(int(amount.replace(",", "")) for amount in comma_amounts)
+
+        plain_amounts = [int(amount) for amount in re.findall(r"\b\d{4,7}\b", text)]
+        return max(plain_amounts) if plain_amounts else 0
 
     def _parse_rating(self, value: Any) -> float | None:
         if value is None:
