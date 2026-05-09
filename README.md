@@ -227,7 +227,7 @@ Use these hosted defaults for public judging:
 
 ```env
 APIFY_LIVE_MODE=true
-APIFY_DEFAULT_SOURCE=olx
+APIFY_DEFAULT_SOURCE=google
 GEMINI_LIVE_MODE=false
 ZYND_ENABLED=false
 SUPERPLANE_ENABLED=false

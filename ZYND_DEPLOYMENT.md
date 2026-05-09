@@ -39,7 +39,7 @@ The wrapper always sends safe flags:
 {
   "use_live_apify": true,
   "confirm_live_run": true,
-  "apify_source": "olx",
+  "apify_source": "google",
   "use_live_llm": false,
   "confirm_live_llm": false
 }
@@ -51,7 +51,7 @@ For final real-data mode, the wrapper can request Apify through the hosted DealP
 
 1. Deploy the main DealPilot backend.
 2. Set `DEALPILOT_API_BASE_URL` in `zynd/.env`.
-3. For real-data Zynd invocation, set `ZYND_USE_LIVE_APIFY=true`, `ZYND_CONFIRM_LIVE_RUN=true`, `ZYND_APIFY_SOURCE=olx`, and `ZYND_MAX_ITEMS=10`.
+3. For real-data Zynd invocation, set `ZYND_USE_LIVE_APIFY=true`, `ZYND_CONFIRM_LIVE_RUN=true`, `ZYND_APIFY_SOURCE=google`, and `ZYND_MAX_ITEMS=10`.
 4. Get or generate a Zynd service keypair.
 5. Upload the `zynd/` folder and keypair through `deployer.zynd.ai`.
 

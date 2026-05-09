@@ -57,7 +57,7 @@ def _safe_full_run_payload(user_goal: str) -> dict[str, Any]:
         "user_goal": user_goal,
         "use_live_apify": use_live_apify,
         "confirm_live_run": use_live_apify and confirm_live_run,
-        "apify_source": os.getenv("ZYND_APIFY_SOURCE", "olx"),
+        "apify_source": os.getenv("ZYND_APIFY_SOURCE", "google"),
         "use_live_llm": False,
         "confirm_live_llm": False,
         "save_report": True,

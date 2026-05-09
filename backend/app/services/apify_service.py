@@ -101,21 +101,15 @@ class ApifyService:
 
             client = ApifyClient(self.settings.apify_api_token)
             run = client.actor(actor_id).call(
-                run_input={
-                    "query": query,
-                    "search": query,
-                    "keyword": query,
-                    "maxItems": max_items_used,
-                    "max_items": max_items_used,
-                    "limit": max_items_used,
-                },
+                run_input=self._run_input_for_source(query, source_key, max_items_used),
                 max_total_charge_usd=self.settings.apify_max_total_charge_usd,
             )
             dataset_id = getattr(run, "default_dataset_id", None)
             if dataset_id is None and isinstance(run, dict):
                 dataset_id = run.get("defaultDatasetId") or run.get("default_dataset_id")
             raw_items = list(client.dataset(dataset_id).iterate_items(limit=max_items_used)) if dataset_id else []
-            listings = [self._normalize_item(query, item, index) for index, item in enumerate(raw_items)]
+            expanded_items = self._expand_raw_items(raw_items, max_items_used)
+            listings = [self._normalize_item(query, item, index, source_key) for index, item in enumerate(expanded_items)]
             listings = listings[:max_items_used]
             if self.settings.apify_cache_enabled:
                 self._write_cache(query, source_key, listings)
@@ -174,7 +168,11 @@ class ApifyService:
             "max_items": min(self.settings.apify_max_items, HARD_MAX_ITEMS),
             "max_total_charge_usd": self.settings.apify_max_total_charge_usd,
             "live_run_audit_enabled": self.settings.apify_live_run_audit_enabled,
-            "warning": "Apify live mode is disabled by default to protect credits.",
+            "warning": (
+                "Apify live mode is enabled with item and charge caps."
+                if self.settings.apify_live_mode
+                else "Apify live mode is disabled by default to protect credits."
+            ),
         }
 
     def clear_cache(self) -> dict[str, int]:
@@ -244,6 +242,68 @@ class ApifyService:
         }
         return actors.get(source) or self.settings.apify_actor_id
 
+    def _run_input_for_source(self, query: str, source: str, max_items: int) -> dict[str, Any]:
+        if source == "google":
+            search_query = f"{query} used marketplace India OLX OR eBay"
+            return {
+                "queries": search_query,
+                "countryCode": "in",
+                "languageCode": "en",
+                "maxPagesPerQuery": 1,
+                "resultsPerPage": min(max_items, 10),
+                "mobileResults": False,
+                "includeUnfilteredResults": False,
+                "saveHtml": False,
+                "saveHtmlToKeyValueStore": False,
+            }
+        if source == "facebook":
+            return {
+                "query": query,
+                "maxItems": max_items,
+                "max_items": max_items,
+                "limit": max_items,
+            }
+        if source == "ebay":
+            return {
+                "query": query,
+                "search": query,
+                "keyword": query,
+                "maxItems": max_items,
+                "max_items": max_items,
+                "limit": max_items,
+            }
+        return {
+            "query": query,
+            "search": query,
+            "keyword": query,
+            "maxItems": max_items,
+            "max_items": max_items,
+            "limit": max_items,
+        }
+
+    def _expand_raw_items(self, raw_items: list[dict[str, Any]], max_items: int) -> list[dict[str, Any]]:
+        expanded: list[dict[str, Any]] = []
+        nested_keys = ("organicResults", "shoppingResults", "paidResults", "results", "items")
+        for item in raw_items:
+            nested_found = False
+            for key in nested_keys:
+                values = item.get(key)
+                if isinstance(values, list):
+                    nested_found = True
+                    for value in values:
+                        if isinstance(value, dict):
+                            merged = {**value}
+                            merged.setdefault("searchQuery", item.get("searchQuery"))
+                            merged.setdefault("data_origin", key)
+                            expanded.append(merged)
+                            if len(expanded) >= max_items:
+                                return expanded
+            if not nested_found:
+                expanded.append(item)
+                if len(expanded) >= max_items:
+                    return expanded
+        return expanded
+
     def _cache_path(self, query: str, source: str = "google") -> Path:
         cache_key = f"{source}:{query.strip().lower()}"
         safe_hash = hashlib.sha256(cache_key.encode("utf-8")).hexdigest()[:24]
@@ -310,16 +370,17 @@ class ApifyService:
         with AUDIT_PATH.open("a", encoding="utf-8") as file:
             file.write(json.dumps(event) + "\n")
 
-    def _normalize_item(self, query: str, item: dict[str, Any], index: int) -> Listing:
+    def _normalize_item(self, query: str, item: dict[str, Any], index: int, source: str = "actor") -> Listing:
         product_key = detect_product_key(query)
-        price = self._parse_price(self._first(item, "price", "amount"))
+        description = str(self._first(item, "description", "text", "snippet") or "")
+        price = self._parse_price(self._first(item, "price", "amount") or description)
         title = str(self._first(item, "title", "name") or "Marketplace listing")
-        listing_url = str(self._first(item, "url", "link", "listingUrl") or "https://example.invalid/apify/listing")
+        listing_url = str(self._first(item, "url", "link", "listingUrl", "displayedUrl") or "https://example.invalid/apify/listing")
         seller = self._first(item, "seller", "sellerName")
         seller_name = seller.get("name") if isinstance(seller, dict) else seller
         image_url = str(self._first(item, "image", "imageUrl", "thumbnail") or f"gradient://{product_key}-apify")
         location = str(self._first(item, "location", "city") or "Unknown location")
-        description = str(self._first(item, "description", "text") or title)
+        description = description or title
 
         return Listing(
             id=f"apify_{hashlib.sha1(f'{query}:{index}:{listing_url}'.encode('utf-8')).hexdigest()[:12]}",
@@ -332,7 +393,7 @@ class ApifyService:
             seller_rating=self._parse_rating(self._first(item, "seller_rating", "sellerRating", "rating")),
             image_url=image_url,
             listing_url=listing_url,
-            source="apify_actor",
+            source=f"apify_{source}",
             condition=str(self._first(item, "condition", "itemCondition") or "used"),
             posted_time=str(self._first(item, "posted_time", "postedTime", "createdAt") or "recently"),
             data_source="apify_live",

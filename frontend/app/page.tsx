@@ -39,7 +39,7 @@ export default function Home() {
         user_goal: nextGoal,
         use_live_apify: useLiveApify,
         confirm_live_run: useLiveApify && confirmLiveRun,
-        apify_source: "olx",
+        apify_source: "google",
         max_items: Math.min(Math.max(maxItems, 1), 20),
         use_live_llm: useLiveLlm,
         confirm_live_llm: useLiveLlm && confirmLiveLlm,

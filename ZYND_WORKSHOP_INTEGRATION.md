@@ -75,7 +75,7 @@ For final real-data mode, the Zynd wrapper can request Apify through the hosted 
 {
   "use_live_apify": true,
   "confirm_live_run": true,
-  "apify_source": "olx",
+  "apify_source": "google",
   "use_live_llm": false,
   "confirm_live_llm": false
 }
