@@ -346,10 +346,14 @@ function CreditSafetyPanel({ result, maxItems }: { result: FullRunResponse | nul
         <SafetyItem label="Apify called" value={safety?.apify_called ?? false} />
         <SafetyItem label="Apify cache used" value={safety?.apify_cache_used ?? false} />
         <SafetyItem label="LLM called" value={safety?.llm_called ?? false} />
-        <SafetyItem label="Zynd called" value={safety?.zynd_called ?? false} />
+        <SafetyItem label="Zynd service deployed" value />
+        <SafetyItem label="Zynd called by this run" value={safety?.zynd_called ?? false} />
         <SafetyItem label="Superplane called" value={safety?.superplane_called ?? false} />
         <Metric label="Items used" value={String(safety?.max_items_used ?? maxItems)} />
       </div>
+      <p className="mt-3 text-xs leading-5 text-slate-400">
+        Direct website runs show `Zynd called by this run=false`. The deployed Zynd endpoint returns `true` when `/webhook/sync` invokes DealPilot.
+      </p>
       <div className="mt-3">
         <SourcePill source={result?.data_source ?? "mock_fallback"} />
       </div>

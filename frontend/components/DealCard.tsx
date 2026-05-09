@@ -1,4 +1,4 @@
-import { BadgeCheck, MapPin, ShieldCheck } from "lucide-react";
+import { BadgeCheck, ExternalLink, MapPin, ShieldCheck } from "lucide-react";
 import { NegotiationPanel } from "./NegotiationPanel";
 import { RiskBadge } from "./RiskBadge";
 import type { RankedDeal } from "../lib/types";
@@ -9,11 +9,21 @@ type DealCardProps = {
 
 export function DealCard({ deal }: DealCardProps) {
   const { listing, deal_analysis, risk_analysis, ranking, negotiation } = deal;
+  const listingHref = listing.listing_url?.trim();
+  const canOpenListing = Boolean(listingHref && listingHref !== "#");
 
   return (
     <article className="glass-panel rounded p-4">
       <div className="grid gap-5 xl:grid-cols-[12rem_1fr]">
-        <div className={`min-h-44 rounded ${gradientClass(listing.image_url)} p-4 ring-1 ring-white/10`}>
+        <a
+          href={canOpenListing ? listingHref : undefined}
+          target="_blank"
+          rel="noreferrer"
+          aria-disabled={!canOpenListing}
+          className={`min-h-44 rounded ${gradientClass(listing.image_url)} p-4 ring-1 ring-white/10 transition ${
+            canOpenListing ? "cursor-pointer hover:scale-[1.01] hover:ring-violet-200/70" : "cursor-default"
+          }`}
+        >
           <div className="flex h-full flex-col justify-between">
             <span className="w-fit rounded bg-black/[0.38] px-3 py-1 text-xs font-semibold text-white/90">
               {listing.data_source}
@@ -23,7 +33,7 @@ export function DealCard({ deal }: DealCardProps) {
               <h3 className="mt-1 text-xl font-semibold text-white">{listing.product_key.toUpperCase()}</h3>
             </div>
           </div>
-        </div>
+        </a>
 
         <div className="min-w-0 space-y-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -34,7 +44,19 @@ export function DealCard({ deal }: DealCardProps) {
                 </span>
                 <RiskBadge level={risk_analysis.risk_level} />
               </div>
-              <h3 className="text-xl font-semibold text-white">{listing.title}</h3>
+              {canOpenListing ? (
+                <a
+                  href={listingHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group inline-flex items-start gap-2 text-xl font-semibold text-white transition hover:text-violet-100"
+                >
+                  <span>{listing.title}</span>
+                  <ExternalLink className="mt-1 shrink-0 opacity-60 transition group-hover:opacity-100" size={17} />
+                </a>
+              ) : (
+                <h3 className="text-xl font-semibold text-white">{listing.title}</h3>
+              )}
               <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-400">
                 <span className="inline-flex items-center gap-1">
                   <MapPin size={15} />
@@ -47,6 +69,17 @@ export function DealCard({ deal }: DealCardProps) {
             <div className="text-right">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Listed price</p>
               <p className="text-2xl font-semibold text-white">{formatInr(listing.price)}</p>
+              {canOpenListing ? (
+                <a
+                  href={listingHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex items-center gap-1 rounded border border-violet-300/25 bg-violet-500/15 px-3 py-1.5 text-xs font-semibold text-violet-100 transition hover:border-violet-200 hover:bg-violet-500/25"
+                >
+                  Open listing
+                  <ExternalLink size={13} />
+                </a>
+              ) : null}
             </div>
           </div>
 
