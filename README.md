@@ -26,7 +26,7 @@ DealPilot AI turns a buyer goal into a structured agent workflow:
 6. Rank the best options.
 7. Draft ethical seller-specific negotiation messages.
 
-The MVP works fully in mock-safe mode without API keys or external API calls.
+The hosted submission is real-data-first: the frontend requests Apify live marketplace data by default, with a 10-item cap, local cache, and fallback behavior if the live actor is unavailable.
 
 ## Why This Is Agentic
 
@@ -223,18 +223,19 @@ https://your-vercel-app.vercel.app/server/health
 https://your-vercel-app.vercel.app/server/api/demo/full-run
 ```
 
-Keep these hosted defaults for public judging:
+Use these hosted defaults for public judging:
 
 ```env
-APIFY_LIVE_MODE=false
+APIFY_LIVE_MODE=true
+APIFY_DEFAULT_SOURCE=olx
 GEMINI_LIVE_MODE=false
 ZYND_ENABLED=false
 SUPERPLANE_ENABLED=false
 ```
 
-## Mock-Safe Demo Instructions
+## Real-Data Demo Instructions
 
-Mock mode is the default and consumes no credits.
+The final hosted demo requests Apify live data first, then reuses cache or safe fallback when needed.
 
 1. Start the backend.
 2. Start the frontend.
@@ -243,7 +244,7 @@ Mock mode is the default and consumes no credits.
    - Used iPhone 14 under INR 45,000
    - Used PS5 under INR 35,000
    - Used MacBook under INR 60,000
-5. Show the best recommendation, ranked results, risk flags, negotiation panel, workflow trace, and credit-safety panel.
+5. Show the real data evidence panel, best recommendation, ranked results, risk flags, negotiation panel, workflow trace, and credit-safety panel.
 
 PowerShell mock API test:
 
@@ -260,11 +261,11 @@ Invoke-RestMethod `
   -Body $body
 ```
 
-Expected credit status:
+Expected hosted result after a successful live run:
 
 ```json
 {
-  "apify_called": false,
+  "apify_called": true,
   "llm_called": false,
   "zynd_called": false,
   "superplane_called": false
@@ -273,7 +274,7 @@ Expected credit status:
 
 ## Optional Live Apify Instructions
 
-Live Apify is optional and should be used only for one controlled test after the mock demo is stable.
+Live Apify is the final demo path. Use it as one controlled run, then rely on cache/replay where possible.
 
 Preparation:
 

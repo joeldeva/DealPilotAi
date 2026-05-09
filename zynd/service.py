@@ -43,15 +43,25 @@ def _parse_goal(input_text: str) -> str:
     return text
 
 
+def _env_bool(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _safe_full_run_payload(user_goal: str) -> dict[str, Any]:
+    use_live_apify = _env_bool("ZYND_USE_LIVE_APIFY", False)
+    confirm_live_run = _env_bool("ZYND_CONFIRM_LIVE_RUN", False)
     return {
         "user_goal": user_goal,
-        "use_live_apify": False,
-        "confirm_live_run": False,
+        "use_live_apify": use_live_apify,
+        "confirm_live_run": use_live_apify and confirm_live_run,
+        "apify_source": os.getenv("ZYND_APIFY_SOURCE", "olx"),
         "use_live_llm": False,
         "confirm_live_llm": False,
         "save_report": True,
-        "max_items": 10,
+        "max_items": min(max(int(os.getenv("ZYND_MAX_ITEMS", "10")), 1), 20),
     }
 
 

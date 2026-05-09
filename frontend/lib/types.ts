@@ -207,8 +207,8 @@ export type GeminiStatus = {
   gemini_live_mode: boolean;
   api_key_configured: boolean;
   model: string;
-  llm_called: false;
-  mode: string;
+  called: boolean;
+  warning: string;
 };
 
 export type ZyndStatus = {

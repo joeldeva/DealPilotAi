@@ -69,18 +69,19 @@ Then it returns:
 
 ## Credit Safety
 
-The Zynd wrapper never enables live Apify or Gemini by default:
+For final real-data mode, the Zynd wrapper can request Apify through the hosted DealPilot backend:
 
 ```json
 {
-  "use_live_apify": false,
-  "confirm_live_run": false,
+  "use_live_apify": true,
+  "confirm_live_run": true,
+  "apify_source": "olx",
   "use_live_llm": false,
   "confirm_live_llm": false
 }
 ```
 
-This means Zynd calls can demonstrate agent discovery/invocation without spending Apify or LLM credits.
+This means Zynd calls can demonstrate real marketplace collection when Apify is configured on the hosted backend. To run a no-credit smoke test, set `ZYND_USE_LIVE_APIFY=false`. Gemini remains disabled unless explicitly added later.
 
 ## Manual Deployment Flow
 

@@ -20,8 +20,8 @@ export default function Home() {
   const [result, setResult] = useState<FullRunResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [useLiveApify, setUseLiveApify] = useState(false);
-  const [confirmLiveRun, setConfirmLiveRun] = useState(false);
+  const [useLiveApify, setUseLiveApify] = useState(true);
+  const [confirmLiveRun, setConfirmLiveRun] = useState(true);
   const [maxItems, setMaxItems] = useState(10);
   const [useLiveLlm, setUseLiveLlm] = useState(false);
   const [confirmLiveLlm, setConfirmLiveLlm] = useState(false);
@@ -39,6 +39,7 @@ export default function Home() {
         user_goal: nextGoal,
         use_live_apify: useLiveApify,
         confirm_live_run: useLiveApify && confirmLiveRun,
+        apify_source: "olx",
         max_items: Math.min(Math.max(maxItems, 1), 20),
         use_live_llm: useLiveLlm,
         confirm_live_llm: useLiveLlm && confirmLiveLlm,
@@ -90,7 +91,7 @@ export default function Home() {
           </div>
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-4 py-2 text-sm font-medium text-emerald-100">
             <LockKeyhole size={15} />
-            Mock-safe mode. No credits consumed.
+            Real-data mode with Apify caps and cache.
           </div>
         </nav>
 
@@ -155,6 +156,8 @@ export default function Home() {
 
         <SponsorBadges />
 
+        <RealDataEvidencePanel result={result} status={hostedStatus} />
+
         <HostedProofPanel status={hostedStatus} />
 
         <RecentReportsPanel
@@ -180,7 +183,7 @@ export default function Home() {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-200/70">Ranked listings</p>
                 <h3 className="mt-1 text-2xl font-semibold text-white">
-                  {result ? `${result.listings_analyzed} listings analyzed` : "Ready for mock analysis"}
+                  {result ? `${result.listings_analyzed} listings analyzed` : "Ready for live marketplace analysis"}
                 </h3>
               </div>
               <SourcePill source={result?.data_source ?? "mock_fallback"} />
@@ -244,7 +247,7 @@ function ControlsPanel({
         <SourcePill source={dataSource} />
       </div>
       <p className="mb-4 text-sm leading-6 text-emerald-100">
-        Mock-safe mode is selected by default. Live Apify and Gemini require separate confirmations before the backend can attempt them.
+        Real-data mode requests Apify first, then uses cache or safe fallback if the live actor is unavailable. Gemini remains optional and off unless confirmed.
       </p>
       <div className="grid gap-3 md:grid-cols-2">
         <ToggleBox
@@ -254,7 +257,7 @@ function ControlsPanel({
             if (!value) onConfirmLiveRunChange(false);
           }}
           title="Use live Apify data"
-          detail="Off by default. Requires backend live mode and manual confirmation."
+          detail="On for final demo. Backend live mode, token, actor ID, cap, and confirmation are still required."
         />
         <ToggleBox
           checked={confirmLiveRun}
@@ -270,7 +273,7 @@ function ControlsPanel({
             if (!value) onConfirmLiveLlmChange(false);
           }}
           title="Enhance with Gemini"
-          detail="Off by default. Deterministic fallback always works."
+          detail="Optional. Leave off unless a Gemini key and quota are configured."
         />
         <ToggleBox
           checked={confirmLiveLlm}
@@ -353,6 +356,40 @@ function CreditSafetyPanel({ result, maxItems }: { result: FullRunResponse | nul
   );
 }
 
+function RealDataEvidencePanel({ result, status }: { result: FullRunResponse | null; status: HostedStatus | null }) {
+  const source = result?.data_source ?? "mock_fallback";
+  const sourceTone =
+    source === "apify_live"
+      ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100"
+      : source === "apify_cache"
+        ? "border-sky-300/30 bg-sky-300/10 text-sky-100"
+        : "border-amber-300/30 bg-amber-300/10 text-amber-100";
+
+  return (
+    <section className="glass-panel rounded-lg p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-200/70">Real data evidence</p>
+          <h3 className="mt-1 text-xl font-semibold text-white">Marketplace source, Zynd readiness, and live-run proof</h3>
+        </div>
+        <span className={`rounded-full border px-4 py-2 text-sm font-semibold ${sourceTone}`}>
+          {sourceLabel(source)}
+        </span>
+      </div>
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+        <Metric label="Data source" value={sourceLabel(source)} />
+        <Metric label="Listings analyzed" value={String(result?.listings_analyzed ?? 0)} />
+        <Metric label="Apify live mode" value={String(status?.apify.apify_live_mode ?? false)} />
+        <Metric label="Apify configured" value={String(Boolean(status?.apify.token_configured && status?.apify.actor_configured))} />
+        <Metric label="Zynd service" value="ready wrapper" />
+      </div>
+      <p className="mt-4 text-sm leading-6 text-slate-300">
+        Final demo target: Apify live on the first controlled run, Apify cache on replay, and Zynd service wrapper ready for deployer-based discovery.
+      </p>
+    </section>
+  );
+}
+
 function HostedProofPanel({ status }: { status: HostedStatus | null }) {
   const backendOnline = status?.health.status === "ok";
   return (
@@ -375,7 +412,7 @@ function HostedProofPanel({ status }: { status: HostedStatus | null }) {
         <ProofTile
           title="Gemini"
           value={status ? `live=${String(status.gemini.gemini_live_mode)}` : "loading"}
-          detail={status ? `key=${String(status.gemini.api_key_configured)}, mode=${status.gemini.mode}` : "Optional LLM status"}
+          detail={status ? `key=${String(status.gemini.api_key_configured)}, called=${String(status.gemini.called)}` : "Optional LLM status"}
         />
         <ProofTile
           title="Zynd AI"
@@ -389,7 +426,7 @@ function HostedProofPanel({ status }: { status: HostedStatus | null }) {
         />
       </div>
       <p className="mt-4 text-sm leading-6 text-slate-300">
-        This panel reads public backend status endpoints only. It proves the hosted demo is connected while keeping all paid/live integrations off by default.
+        This panel reads public backend status endpoints only. It proves the hosted demo is connected and shows which live integrations are configured.
       </p>
     </section>
   );
@@ -500,7 +537,7 @@ function BestRecommendationCard({
         </div>
       ) : (
         <div className="mt-6 rounded-lg border border-dashed border-white/15 p-6 text-sm leading-6 text-slate-300">
-          Run a mock demo to see the top listing, risk posture, fair price, and negotiation target.
+          Run the live marketplace analysis to see the top listing, risk posture, fair price, and negotiation target.
         </div>
       )}
     </section>
@@ -512,7 +549,7 @@ function EmptyState() {
     <div className="glass-panel rounded-lg p-8 text-slate-300">
       <p className="text-lg font-semibold text-white">No run yet</p>
       <p className="mt-2 max-w-2xl text-sm leading-6">
-        Choose a quick demo or enter a buying goal. The app will use local mock listings and deterministic agents by default.
+        Choose a quick demo or enter a buying goal. The app will request Apify marketplace data first, then fall back safely if live collection is unavailable.
       </p>
     </div>
   );

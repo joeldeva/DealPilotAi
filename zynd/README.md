@@ -35,14 +35,14 @@ The wrapper always invokes DealPilot in safe mode:
 
 ```json
 {
-  "use_live_apify": false,
-  "confirm_live_run": false,
+  "use_live_apify": true,
+  "confirm_live_run": true,
   "use_live_llm": false,
   "confirm_live_llm": false
 }
 ```
 
-So Zynd service calls do not consume Apify or Gemini credits by default.
+For the final real-data demo, `.env.example` enables Apify live mode through the hosted DealPilot backend with `ZYND_MAX_ITEMS=10`. Gemini remains disabled. If you need a no-credit Zynd test, set `ZYND_USE_LIVE_APIFY=false`.
 
 ## Test Payload
 

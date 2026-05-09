@@ -37,21 +37,23 @@ The wrapper always sends safe flags:
 
 ```json
 {
-  "use_live_apify": false,
-  "confirm_live_run": false,
+  "use_live_apify": true,
+  "confirm_live_run": true,
+  "apify_source": "olx",
   "use_live_llm": false,
   "confirm_live_llm": false
 }
 ```
 
-That means Zynd invocations do not consume Apify or Gemini quota by default.
+For final real-data mode, the wrapper can request Apify through the hosted DealPilot backend using `ZYND_USE_LIVE_APIFY=true` and `ZYND_CONFIRM_LIVE_RUN=true`. Gemini remains disabled. To run a no-credit Zynd smoke test, set `ZYND_USE_LIVE_APIFY=false`.
 
 ## Required Before Real Zynd Deployment
 
 1. Deploy the main DealPilot backend.
 2. Set `DEALPILOT_API_BASE_URL` in `zynd/.env`.
-3. Get or generate a Zynd service keypair.
-4. Upload the `zynd/` folder and keypair through `deployer.zynd.ai`.
+3. For real-data Zynd invocation, set `ZYND_USE_LIVE_APIFY=true`, `ZYND_CONFIRM_LIVE_RUN=true`, `ZYND_APIFY_SOURCE=olx`, and `ZYND_MAX_ITEMS=10`.
+4. Get or generate a Zynd service keypair.
+5. Upload the `zynd/` folder and keypair through `deployer.zynd.ai`.
 
 Do not upload:
 

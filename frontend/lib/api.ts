@@ -13,7 +13,7 @@ export async function runFullDemo(request: FullRunRequest): Promise<FullRunRespo
       mode: "mock",
       use_live_apify: request.use_live_apify,
       confirm_live_run: request.confirm_live_run,
-      apify_source: request.apify_source ?? "google",
+      apify_source: request.apify_source ?? "olx",
       max_items: request.max_items,
       use_live_llm: request.use_live_llm,
       confirm_live_llm: request.confirm_live_llm,
