@@ -11,7 +11,7 @@ type SearchFormProps = {
   onQuickRun: (goal: string) => void;
 };
 
-const chipLabels = ["Used iPhone 14 under INR 45,000", "Used PS5 under INR 35,000", "Used MacBook under INR 60,000"];
+const chipLabels = ["iPhone 14 / INR 45k", "PS5 / INR 35k", "MacBook / INR 60k"];
 
 export function SearchForm({
   goal,
@@ -22,39 +22,37 @@ export function SearchForm({
   onQuickRun,
 }: SearchFormProps) {
   return (
-    <div className="space-y-4">
-      <div className="rounded border border-violet-400/25 bg-black/35 p-2 shadow-2xl shadow-black/30">
-        <div className="flex flex-col gap-2 md:flex-row">
-          <label className="flex min-w-0 flex-1 items-center gap-3 rounded bg-[#0a0610] px-4 py-3 ring-1 ring-violet-400/20">
-            <Search className="shrink-0 text-violet-200" size={20} />
-            <input
-              value={goal}
-              onChange={(event) => onGoalChange(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") onSubmit();
-              }}
-              className="w-full bg-transparent text-base font-medium text-white outline-none placeholder:text-slate-500"
-              placeholder="Find me a used iPhone 14 under INR 45000"
-            />
-          </label>
-          <button
-            onClick={onSubmit}
-            disabled={loading || !goal.trim()}
-            className="inline-flex items-center justify-center gap-2 rounded bg-violet-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? <Loader2 className="animate-spin" size={18} /> : <Play size={18} />}
-            Run Agent
-          </button>
-        </div>
-      </div>
+    <div className="dp-search-section">
+      <form
+        className="dp-search-wrap"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSubmit();
+        }}
+      >
+        <label className="dp-search-field">
+          <Search size={18} />
+          <input
+            value={goal}
+            onChange={(event) => onGoalChange(event.target.value)}
+            className="dp-search"
+            placeholder="Search any deal goal, for example used iPhone 14 under INR 45000"
+          />
+        </label>
+        <button className="dp-run-btn" type="submit" disabled={loading || !goal.trim()}>
+          {loading ? <Loader2 className="animate-spin" size={17} /> : <Play size={17} />}
+          Run agent
+        </button>
+      </form>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="dp-chips">
         {demoGoals.map((item, index) => (
           <button
             key={item}
+            type="button"
             onClick={() => onQuickRun(item)}
             disabled={loading}
-            className="rounded border border-violet-400/20 bg-violet-400/[0.06] px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-violet-200/50 hover:bg-violet-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+            className="dp-chip"
           >
             {chipLabels[index] ?? item}
           </button>
