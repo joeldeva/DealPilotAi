@@ -23,7 +23,7 @@ class Settings(BaseModel):
     apify_live_run_audit_enabled: bool = True
     gemini_live_mode: bool = False
     gemini_api_key: str | None = None
-    gemini_model: str = "gemini-1.5-flash"
+    gemini_model: str = "gemini-2.5-flash"
     gemini_timeout_seconds: int = 20
     gemini_max_output_tokens: int = 220
     gemini_audit_enabled: bool = True
@@ -90,7 +90,7 @@ def get_settings() -> Settings:
         apify_live_run_audit_enabled=_env_bool("APIFY_LIVE_RUN_AUDIT_ENABLED", True),
         gemini_live_mode=_env_bool("GEMINI_LIVE_MODE", False),
         gemini_api_key=os.getenv("GEMINI_API_KEY") or None,
-        gemini_model=os.getenv("GEMINI_MODEL", "gemini-1.5-flash"),
+        gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
         gemini_timeout_seconds=int(os.getenv("GEMINI_TIMEOUT_SECONDS", "20")),
         gemini_max_output_tokens=int(os.getenv("GEMINI_MAX_OUTPUT_TOKENS", "220")),
         gemini_audit_enabled=_env_bool("GEMINI_AUDIT_ENABLED", True),

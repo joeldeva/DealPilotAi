@@ -64,7 +64,7 @@ class LLMService:
                 reason="Gemini call completed.",
             )
             return {"text": text or fallback_text, "llm_called": True, "mode": "gemini_live"}
-        except (OSError, HTTPError, URLError, TimeoutError, ValueError, KeyError, json.JSONDecodeError) as exc:
+        except Exception as exc:
             return self._fallback(
                 fallback_text,
                 "Gemini call failed; deterministic fallback used.",
