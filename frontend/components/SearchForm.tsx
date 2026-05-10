@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Play, Search } from "lucide-react";
+import { Loader2, Play, Radar, Search } from "lucide-react";
 
 type SearchFormProps = {
   goal: string;
@@ -8,6 +8,7 @@ type SearchFormProps = {
   loading: boolean;
   onGoalChange: (goal: string) => void;
   onSubmit: () => void;
+  onDeepScan: () => void;
   onQuickRun: (goal: string) => void;
 };
 
@@ -19,6 +20,7 @@ export function SearchForm({
   loading,
   onGoalChange,
   onSubmit,
+  onDeepScan,
   onQuickRun,
 }: SearchFormProps) {
   return (
@@ -42,6 +44,15 @@ export function SearchForm({
         <button className="btn-3d w-full px-8 py-4 text-base shadow-2xl md:w-auto" type="submit" disabled={loading || !goal.trim()}>
           {loading ? <Loader2 className="animate-spin" size={20} /> : <Play size={20} className="fill-current" />}
           {loading ? "Analyzing..." : "Run Agent"}
+        </button>
+        <button
+          className="chip-3d inline-flex w-full items-center justify-center gap-2 px-6 py-4 text-sm font-bold text-purple-100 md:w-auto"
+          type="button"
+          disabled={loading || !goal.trim()}
+          onClick={onDeepScan}
+        >
+          {loading ? <Loader2 className="animate-spin" size={18} /> : <Radar size={18} />}
+          Deep Scan
         </button>
       </form>
 

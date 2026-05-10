@@ -3,12 +3,15 @@ from pydantic import BaseModel, Field
 
 from .analysis import (
     DealAnalysis,
+    DuplicateSignal,
     MarketBenchmark,
     ParsedIntent,
+    PlatformSignal,
     ProductSafetyChecklist,
     RankingAnalysis,
     RealDataEvidence,
     RiskAnalysis,
+    SourceBreakdown,
     WhyNotCheapest,
 )
 from .listing import Listing
@@ -137,6 +140,10 @@ class FullRunResponse(BaseModel):
     product_safety_checklist: ProductSafetyChecklist | None = None
     why_not_cheapest: WhyNotCheapest | None = None
     real_data_evidence: RealDataEvidence | None = None
+    scan_mode: str = "standard"
+    source_breakdown: list[SourceBreakdown] = Field(default_factory=list)
+    duplicate_signals: list[DuplicateSignal] = Field(default_factory=list)
+    platform_signals: list[PlatformSignal] = Field(default_factory=list)
     agent_trace: list[AgentTraceStep]
     workflow_events: list[WorkflowEvent] = Field(default_factory=list)
     credit_safety: CreditSafety = Field(default_factory=CreditSafety)

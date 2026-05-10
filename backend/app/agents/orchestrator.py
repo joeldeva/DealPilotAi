@@ -5,6 +5,12 @@ from app.agents.market_benchmark import calculate_market_benchmark
 from app.agents.negotiation_agent import generate_negotiation_draft, polish_opening_message
 from app.agents.product_safety_checklist import build_product_safety_checklist
 from app.agents.scam_detector import detect_scam_risk
+from app.agents.source_intelligence import (
+    build_platform_signals,
+    build_source_breakdown,
+    detect_duplicate_signals,
+    source_intelligence_summary,
+)
 from app.agents.why_not_cheapest import explain_why_not_cheapest
 from app.config import get_settings
 from app.models.api import AgentTraceStep, CreditSafety, FullRunResponse, RankedDeal, SearchResponse
@@ -227,7 +233,13 @@ class DealPilotOrchestrator:
         )
         product_safety_checklist = build_product_safety_checklist(parsed_intent)
         why_not_cheapest = explain_why_not_cheapest(ranked_results)
+        source_breakdown = build_source_breakdown(ranked_results)
+        duplicate_signals = detect_duplicate_signals(ranked_results)
+        platform_signals = build_platform_signals(ranked_results)
+        source_summary = source_intelligence_summary(source_breakdown, duplicate_signals)
+        scan_mode = "deep_scan" if max_items > 10 or apify_result["max_items_used"] > 10 else "standard"
         trace.append(self._trace("Market Benchmark", market_benchmark.summary))
+        trace.append(self._trace("Source Intelligence", source_summary))
         trace.append(self._trace("Buyer Safety Checklist", product_safety_checklist.summary))
         emit_event(
             "DEMO_RUN_COMPLETED",
@@ -266,6 +278,10 @@ class DealPilotOrchestrator:
             product_safety_checklist=product_safety_checklist,
             why_not_cheapest=why_not_cheapest,
             real_data_evidence=real_data_evidence,
+            scan_mode=scan_mode,
+            source_breakdown=source_breakdown,
+            duplicate_signals=duplicate_signals,
+            platform_signals=platform_signals,
             agent_trace=trace,
             workflow_events=get_events(),
             credit_safety=credit_safety,

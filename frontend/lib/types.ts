@@ -135,6 +135,35 @@ export type RealDataEvidence = {
   evidence_label: string;
 };
 
+export type SourceBreakdown = {
+  source: string;
+  listing_count: number;
+  median_price: number;
+  average_price: number;
+  lowest_price: number;
+  highest_price: number;
+  medium_or_high_risk_count: number;
+  suspicious_listing_count: number;
+};
+
+export type DuplicateSignal = {
+  listing_ids: string[];
+  titles: string[];
+  signal_type: string;
+  confidence: number;
+  explanation: string;
+};
+
+export type PlatformSignal = {
+  listing_id: string;
+  source: string;
+  source_confidence_score: number;
+  source_confidence_label: "high" | "medium" | "low" | string;
+  freshness_score: number;
+  freshness_label: "fresh" | "recent" | "aging" | "stale" | "unknown" | string;
+  notes: string[];
+};
+
 export type AgentTraceStep = {
   step: string;
   status: string;
@@ -190,6 +219,10 @@ export type FullRunResponse = {
   product_safety_checklist: ProductSafetyChecklist | null;
   why_not_cheapest: WhyNotCheapest | null;
   real_data_evidence: RealDataEvidence | null;
+  scan_mode: "standard" | "deep_scan" | string;
+  source_breakdown: SourceBreakdown[];
+  duplicate_signals: DuplicateSignal[];
+  platform_signals: PlatformSignal[];
   agent_trace: AgentTraceStep[];
   workflow_events: WorkflowEvent[];
   credit_safety: CreditSafety;

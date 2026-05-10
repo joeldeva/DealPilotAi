@@ -97,3 +97,32 @@ class RealDataEvidence(BaseModel):
     listings_analyzed: int
     live_run_confirmed: bool
     evidence_label: str
+
+
+class SourceBreakdown(BaseModel):
+    source: str
+    listing_count: int
+    median_price: int
+    average_price: int
+    lowest_price: int
+    highest_price: int
+    medium_or_high_risk_count: int
+    suspicious_listing_count: int
+
+
+class DuplicateSignal(BaseModel):
+    listing_ids: list[str]
+    titles: list[str]
+    signal_type: str
+    confidence: float
+    explanation: str
+
+
+class PlatformSignal(BaseModel):
+    listing_id: str
+    source: str
+    source_confidence_score: int
+    source_confidence_label: str
+    freshness_score: int
+    freshness_label: str
+    notes: list[str] = Field(default_factory=list)

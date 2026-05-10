@@ -12,6 +12,7 @@ import {
   Linkedin,
   Loader2,
   MessageSquareText,
+  Radar,
   Search,
   ShieldCheck,
   Sparkles,
@@ -41,6 +42,7 @@ type SearchHistoryItem = {
   riskLevel: string | null;
   negotiationTarget: number | null;
   reportId: string | null;
+  scanMode: string;
 };
 
 const workflowSteps = [
@@ -55,6 +57,7 @@ export default function Home() {
   const [goal, setGoal] = useState(demoGoals[0]);
   const [result, setResult] = useState<FullRunResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [activeScanMode, setActiveScanMode] = useState<"standard" | "deep_scan">("standard");
   const [error, setError] = useState<string | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
 
@@ -73,11 +76,12 @@ export default function Home() {
   const topDeal = useMemo(() => result?.best_recommendation ?? result?.ranked_results?.[0] ?? null, [result]);
   const rankedResults = result?.ranked_results ?? [];
 
-  async function handleRun(nextGoal = goal) {
+  async function handleRun(nextGoal = goal, scanMode: "standard" | "deep_scan" = "standard") {
     const trimmedGoal = nextGoal.trim();
     if (!trimmedGoal) return;
 
     setGoal(trimmedGoal);
+    setActiveScanMode(scanMode);
     setLoading(true);
     setError(null);
 
@@ -87,7 +91,7 @@ export default function Home() {
         use_live_apify: true,
         confirm_live_run: true,
         apify_source: "multi",
-        max_items: 20,
+        max_items: scanMode === "deep_scan" ? 20 : 10,
         use_live_llm: true,
         confirm_live_llm: true,
         save_report: true,
@@ -115,6 +119,7 @@ export default function Home() {
       riskLevel: best?.risk_analysis.risk_level ?? null,
       negotiationTarget: best?.negotiation.target_price ?? null,
       reportId: response.report_id,
+      scanMode: response.scan_mode ?? "standard",
     };
 
     setSearchHistory((current) => {
@@ -172,7 +177,8 @@ export default function Home() {
             loading={loading}
             onGoalChange={setGoal}
             onSubmit={() => handleRun(goal)}
-            onQuickRun={handleRun}
+            onDeepScan={() => handleRun(goal, "deep_scan")}
+            onQuickRun={(quickGoal) => handleRun(quickGoal, "standard")}
           />
         </section>
 
@@ -199,13 +205,14 @@ export default function Home() {
               </h2>
             </div>
             <span className="rounded-full border border-slate-700 bg-slate-800/50 px-4 py-2 text-xs font-semibold text-slate-300">
-              {sourceLabel(result?.data_source)}
+              {result ? scanLabel(result) : activeScanMode === "deep_scan" ? "Deep scan ready" : sourceLabel()}
             </span>
           </div>
 
           {result && topDeal ? (
             <div className="flex flex-col gap-6">
               <PhaseTwoInsights result={result} />
+              <SourceIntelligencePanel result={result} />
               <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <BestDealCard deal={topDeal} result={result} />
                 <NegotiationCard deal={topDeal} />
@@ -370,6 +377,108 @@ function WhyNotCheapestCard({ result }: { result: FullRunResponse }) {
   );
 }
 
+function SourceIntelligencePanel({ result }: { result: FullRunResponse }) {
+  const breakdown = result.source_breakdown ?? [];
+  const duplicates = result.duplicate_signals ?? [];
+  const platformSignals = result.platform_signals ?? [];
+  if (!breakdown.length && !platformSignals.length) return null;
+
+  const totalListings = breakdown.reduce((sum, source) => sum + source.listing_count, 0);
+  const maxCount = Math.max(1, ...breakdown.map((source) => source.listing_count));
+
+  return (
+    <section className="glass-panel-3d p-5 md:p-8">
+      <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-start">
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.15em] text-violet-300">Cross-source intelligence</p>
+          <h2 className="text-xl font-bold text-white">Multi-platform coverage and trust signals</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+            Compared {totalListings || result.listings_analyzed} listing(s), grouped by marketplace source, duplicate risk, freshness, and source confidence.
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-2 text-xs font-bold text-violet-200">
+          <Radar size={15} />
+          {scanLabel(result)}
+        </span>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr_1fr]">
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white">Source breakdown</h3>
+            <span className="text-xs text-slate-500">{breakdown.length} source buckets</span>
+          </div>
+          <div className="space-y-4">
+            {breakdown.map((source) => (
+              <div key={source.source}>
+                <div className="mb-2 flex items-center justify-between gap-3 text-xs">
+                  <span className="font-bold text-slate-200">{source.source}</span>
+                  <span className="text-slate-400">
+                    {source.listing_count} listings / median {formatInr(source.median_price)}
+                  </span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-slate-800">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-pink-400"
+                    style={{ width: `${Math.max(8, (source.listing_count / maxCount) * 100)}%` }}
+                  />
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-wider text-slate-500">
+                  <span>Avg {formatInr(source.average_price)}</span>
+                  <span>{source.medium_or_high_risk_count} risk</span>
+                  <span>{source.suspicious_listing_count} suspicious</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white">Duplicate watch</h3>
+            <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase ${duplicates.length ? "bg-amber-500/20 text-amber-200" : "bg-emerald-500/20 text-emerald-200"}`}>
+              {duplicates.length ? `${duplicates.length} signals` : "clear"}
+            </span>
+          </div>
+          {duplicates.length ? (
+            <div className="space-y-3">
+              {duplicates.slice(0, 3).map((signal) => (
+                <div key={`${signal.signal_type}-${signal.listing_ids.join("-")}`} className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-3">
+                  <p className="text-xs font-bold uppercase tracking-wider text-amber-200">{signal.signal_type.replaceAll("_", " ")}</p>
+                  <p className="mt-2 text-xs leading-5 text-slate-300">{signal.explanation}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm leading-6 text-slate-400">No strong duplicate listings were detected across the current result set.</p>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-bold text-white">Freshness and confidence</h3>
+            <span className="text-xs text-slate-500">top signals</span>
+          </div>
+          <div className="space-y-3">
+            {platformSignals.slice(0, 4).map((signal) => (
+              <div key={signal.listing_id} className="rounded-xl border border-white/10 bg-slate-950/30 p-3">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <span className="text-xs font-bold text-slate-200">{signal.source}</span>
+                  <span className="font-mono text-xs text-indigo-300">{signal.source_confidence_score}/100</span>
+                </div>
+                <div className="flex flex-wrap gap-2 text-[10px] uppercase tracking-wider">
+                  <span className="rounded-full bg-indigo-500/15 px-2 py-1 text-indigo-200">{signal.source_confidence_label} confidence</span>
+                  <span className="rounded-full bg-cyan-500/15 px-2 py-1 text-cyan-200">{signal.freshness_label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function WorkflowPanel({ loading, hasResult }: { loading: boolean; hasResult: boolean }) {
   return (
     <section className="glass-panel-3d p-5 md:p-8">
@@ -436,7 +545,7 @@ function SearchHistoryPanel({
                     <strong className="text-indigo-300">{item.dealScore ? `${item.dealScore}/100` : "new"}</strong> score
                     {item.price ? ` / ${formatInr(item.price)}` : ""}
                   </span>
-                  <span>{formatTimeAgo(item.createdAt)}</span>
+                  <span>{item.scanMode === "deep_scan" ? "deep" : formatTimeAgo(item.createdAt)}</span>
                 </div>
               </button>
             ))}
@@ -671,6 +780,11 @@ function sourceLabel(source?: FullRunResponse["data_source"]) {
   if (source === "apify_live") return "Apify live";
   if (source === "apify_cache") return "Marketplace cache";
   return source ? "Marketplace analysis" : "Ready for search";
+}
+
+function scanLabel(result: FullRunResponse) {
+  const source = sourceLabel(result.data_source);
+  return result.scan_mode === "deep_scan" ? `Deep scan / ${source}` : `Standard scan / ${source}`;
 }
 
 function riskClass(level: string) {
