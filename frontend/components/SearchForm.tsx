@@ -22,16 +22,16 @@ export function SearchForm({
   onQuickRun,
 }: SearchFormProps) {
   return (
-    <div className="max-w-4xl mx-auto w-full mt-8 mb-12 perspective-container">
+    <div className="mx-auto mb-4 mt-6 w-full max-w-4xl">
       <form
-        className="flex flex-col md:flex-row items-stretch gap-4 preserve-3d"
+        className="flex flex-col items-stretch gap-4 md:flex-row"
         onSubmit={(event) => {
           event.preventDefault();
           onSubmit();
         }}
       >
-        <div className="search-input-wrapper flex-1 flex items-center gap-3 bg-white/5 border border-white/10 hover:border-indigo-500/50 rounded-2xl px-5 py-4 focus-within:border-indigo-400 focus-within:bg-white/10 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.2)]">
-          <Search size={20} className="text-indigo-400 floating-icon flex-shrink-0" />
+        <div className="flex flex-1 items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 shadow-[0_4px_20px_rgba(0,0,0,0.2)] transition-colors hover:border-indigo-500/50 focus-within:border-indigo-400 focus-within:bg-white/10">
+          <Search size={20} className="flex-shrink-0 text-indigo-400" />
           <input
             value={goal}
             onChange={(event) => onGoalChange(event.target.value)}
@@ -39,13 +39,13 @@ export function SearchForm({
             placeholder="Search any deal goal, for example: used iPhone 14 under INR 45k"
           />
         </div>
-        <button className="btn-3d md:w-auto w-full py-4 px-8 text-base shadow-2xl" type="submit" disabled={loading || !goal.trim()}>
+        <button className="btn-3d w-full px-8 py-4 text-base shadow-2xl md:w-auto" type="submit" disabled={loading || !goal.trim()}>
           {loading ? <Loader2 className="animate-spin" size={20} /> : <Play size={20} className="fill-current" />}
           {loading ? "Analyzing..." : "Run Agent"}
         </button>
       </form>
 
-      <div className="flex flex-wrap justify-center gap-3 mt-6 preserve-3d">
+      <div className="mt-5 flex flex-wrap justify-center gap-3">
         {demoGoals.map((item, index) => (
           <button
             key={item}

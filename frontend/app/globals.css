@@ -33,15 +33,11 @@ body {
 body::before {
   content: "";
   position: fixed;
-  inset: -100%;
-  width: 300%;
-  height: 300%;
+  inset: 0;
   background-image: 
     linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
   background-size: 60px 60px;
-  transform: perspective(600px) rotateX(65deg) translateY(-100px) translateZ(-250px);
-  animation: gridMove 25s linear infinite;
   pointer-events: none;
   z-index: -1;
 }
@@ -72,8 +68,7 @@ body::before {
     0 25px 50px -12px rgba(0, 0, 0, 0.6),
     inset 0 0 0 1px rgba(255, 255, 255, 0.02);
   border-radius: 28px;
-  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-  transform-style: preserve-3d;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
 }
@@ -87,42 +82,36 @@ body::before {
 }
 
 .glass-panel-3d:hover {
-  transform: translateY(-10px) rotateX(3deg) rotateY(-2deg);
   box-shadow: 
-    -15px 35px 60px -10px rgba(0, 0, 0, 0.8),
-    0 0 30px rgba(139, 92, 246, 0.15),
+    0 25px 50px -12px rgba(0, 0, 0, 0.62),
     inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   border-color: rgba(139, 92, 246, 0.3);
 }
 
 /* Inner pop-out elements */
 .pop-out {
-  transform: translateZ(30px);
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: none;
 }
 .glass-panel-3d:hover .pop-out {
-  transform: translateZ(50px);
+  transform: none;
 }
 .pop-out-more {
-  transform: translateZ(50px);
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: none;
 }
 .glass-panel-3d:hover .pop-out-more {
-  transform: translateZ(80px);
+  transform: none;
 }
 
 /* 3D Button */
 .btn-3d {
   background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
   background-size: 200% 200%;
-  animation: gradientFlow 5s ease infinite;
   box-shadow: 
     0 12px 24px -6px rgba(168, 85, 247, 0.6),
     inset 0 2px 2px rgba(255, 255, 255, 0.3);
   position: relative;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  transform-style: preserve-3d;
+  transition: background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
   color: white;
   border-radius: 16px;
   font-weight: 700;
@@ -135,13 +124,11 @@ body::before {
 }
 
 .btn-3d:hover:not(:disabled) {
-  transform: translateY(-4px) scale(1.03);
   box-shadow: 
-    0 18px 30px -5px rgba(168, 85, 247, 0.7),
+    0 14px 28px -7px rgba(168, 85, 247, 0.62),
     inset 0 2px 2px rgba(255, 255, 255, 0.4);
 }
 .btn-3d:active:not(:disabled) {
-  transform: translateY(2px) scale(0.98);
   box-shadow: 
     0 5px 10px -5px rgba(168, 85, 247, 0.5),
     inset 0 2px 2px rgba(255, 255, 255, 0.2);
@@ -172,10 +159,10 @@ body::before {
 
 /* Floating animation */
 .floating {
-  animation: float 5s ease-in-out infinite;
+  animation: none;
 }
 .floating-delayed {
-  animation: float 5s ease-in-out 2.5s infinite;
+  animation: none;
 }
 
 @keyframes float {
@@ -215,14 +202,12 @@ body::before {
 /* Step Indicator 3D */
 .step-indicator {
   position: relative;
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transform-style: preserve-3d;
+  transition: border-color 0.2s ease, background 0.2s ease;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
   border-radius: 20px;
 }
 .step-indicator.active {
-  transform: scale(1.08) translateZ(30px);
   box-shadow: 0 15px 30px rgba(168, 85, 247, 0.3);
   border-color: rgba(168, 85, 247, 0.6);
   background: rgba(168, 85, 247, 0.15);
@@ -234,12 +219,11 @@ body::before {
 
 /* Interactive list rows */
 .interactive-row {
-  transition: all 0.3s ease;
+  transition: background 0.2s ease, border-color 0.2s ease;
   border: 1px solid transparent;
 }
 .interactive-row:hover {
   background: rgba(255, 255, 255, 0.06);
-  transform: translateX(8px) translateZ(10px);
   border-color: rgba(168, 85, 247, 0.3);
   border-radius: 12px;
   box-shadow: -5px 5px 15px rgba(0,0,0,0.2);
@@ -251,13 +235,24 @@ body::before {
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 16px;
   padding: 16px;
-  transition: all 0.3s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 .metric-card-3d:hover {
   background: rgba(255,255,255,0.06);
   border-color: rgba(168, 85, 247, 0.4);
-  transform: translateY(-3px) scale(1.02);
   box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+
+.chip-3d {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.chip-3d:hover {
+  border-color: rgba(168, 85, 247, 0.45);
+  background: rgba(168, 85, 247, 0.14);
 }
