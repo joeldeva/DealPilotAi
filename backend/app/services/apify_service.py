@@ -49,7 +49,7 @@ class ApifyService:
         max_items_requested = max_items
         max_items_used = self._clamp_max_items(max_items)
         source_key = self._source_key(source)
-        actor_id = self._actor_id_for_source(source_key)
+        actor_id, run_input = self._resolve_actor_and_input(query, source_key, max_items_used)
 
         if source_key == "multi":
             return self._multi_source_response(query, max_items_requested, max_items_used, confirm_live_run)
@@ -106,7 +106,7 @@ class ApifyService:
 
             client = ApifyClient(self.settings.apify_api_token)
             run = client.actor(actor_id).call(
-                run_input=self._run_input_for_source(query, source_key, max_items_used),
+                run_input=run_input,
                 max_total_charge_usd=self.settings.apify_max_total_charge_usd,
             )
             dataset_id = getattr(run, "default_dataset_id", None)
@@ -187,6 +187,7 @@ class ApifyService:
                 "multi_source_available": True,
                 "olx_configured": bool(self.settings.apify_olx_actor_id),
                 "ebay_configured": bool(self.settings.apify_ebay_actor_id),
+                "amazon_configured": bool(self.settings.apify_amazon_actor_id),
                 "facebook_configured": bool(self.settings.apify_facebook_actor_id),
                 "google_configured": bool(self.settings.apify_google_actor_id),
                 "fallback_actor_configured": bool(self.settings.apify_actor_id),
@@ -305,13 +306,16 @@ class ApifyService:
 
     def _configured_sources(self) -> list[str]:
         explicit_actor_ids = {
-            "google": self.settings.apify_google_actor_id,
             "olx": self.settings.apify_olx_actor_id,
             "ebay": self.settings.apify_ebay_actor_id,
+            "amazon": self.settings.apify_amazon_actor_id,
+            "google": self.settings.apify_google_actor_id,
             "facebook": self.settings.apify_facebook_actor_id,
         }
-        preferred = ["google", "olx", "ebay", "facebook"]
-        configured = [source for source in preferred if explicit_actor_ids[source]]
+        # Prefer dedicated actors; only include sources that have a dedicated actor
+        preferred = ["olx", "ebay", "amazon", "facebook", "google"]
+        configured = [src for src in preferred if explicit_actor_ids[src]]
+
         if configured:
             return configured
 
@@ -332,7 +336,7 @@ class ApifyService:
         return min(requested, configured, HARD_MAX_ITEMS)
 
     def _source_key(self, source: str | None) -> str:
-        requested = (source or self.settings.apify_default_source or "google").strip().lower()
+        requested = (source or self.settings.apify_default_source or "multi").strip().lower()
         aliases = {
             "all": "multi",
             "multiple": "multi",
@@ -343,24 +347,46 @@ class ApifyService:
             "facebook-marketplace": "facebook",
             "google_search": "google",
             "google-shopping": "google",
+            "amz": "amazon",
+            "amazon.in": "amazon",
         }
         normalized = aliases.get(requested, requested)
-        return normalized if normalized in {"olx", "ebay", "facebook", "google", "multi"} else "google"
+        return normalized if normalized in {"olx", "ebay", "amazon", "facebook", "google", "multi"} else "multi"
 
     def _actor_id_for_source(self, source: str) -> str | None:
         actors = {
             "olx": self.settings.apify_olx_actor_id,
             "ebay": self.settings.apify_ebay_actor_id,
+            "amazon": self.settings.apify_amazon_actor_id,
             "facebook": self.settings.apify_facebook_actor_id,
             "google": self.settings.apify_google_actor_id,
         }
         return actors.get(source) or self.settings.apify_actor_id
 
+    def _source_has_dedicated_actor(self, source: str) -> bool:
+        dedicated_actors = {
+            "olx": self.settings.apify_olx_actor_id,
+            "ebay": self.settings.apify_ebay_actor_id,
+            "amazon": self.settings.apify_amazon_actor_id,
+            "facebook": self.settings.apify_facebook_actor_id,
+            "google": self.settings.apify_google_actor_id,
+        }
+        return bool(dedicated_actors.get(source))
+
+    def _resolve_actor_and_input(self, query: str, source: str, max_items: int) -> tuple[str | None, dict[str, Any]]:
+        actor_id = self._actor_id_for_source(source)
+        if source in {"olx", "ebay", "amazon", "facebook"} and not self._source_has_dedicated_actor(source):
+            google_actor_id = self._actor_id_for_source("google")
+            if google_actor_id:
+                return google_actor_id, self._google_marketplace_input(query, source, max_items)
+        return actor_id, self._run_input_for_source(query, source, max_items)
+
     def _run_input_for_source(self, query: str, source: str, max_items: int) -> dict[str, Any]:
         marketplace_query = _simplify_marketplace_query(query)
         encoded_query = quote_plus(marketplace_query)
+
         if source == "google":
-            search_query = f"{query} used marketplace India OLX OR eBay"
+            search_query = f"{query} used marketplace India OLX OR eBay OR Amazon"
             return {
                 "queries": search_query,
                 "countryCode": "in",
@@ -372,48 +398,57 @@ class ApifyService:
                 "saveHtml": False,
                 "saveHtmlToKeyValueStore": False,
             }
+
+        if source == "olx":
+            # ecomscrape/olx-product-search-scraper — input: urls[], max_items_per_url, proxy
+            return {
+                "urls": [
+                    f"https://www.olx.in/items/q-{encoded_query}",
+                    f"https://www.olx.in/items/q-{encoded_query}?filter=price_from_10&sort=priceasc",
+                ],
+                "max_items_per_url": max_items,
+                "max_retries_per_url": 2,
+                "proxy": {
+                    "useApifyProxy": True,
+                    "apifyProxyGroups": ["RESIDENTIAL"],
+                    "apifyProxyCountry": "IN",
+                },
+            }
+
+        if source == "ebay":
+            # delicious_zebu/ebay-product-listing-scraper — input: urls[]
+            return {
+                "urls": [
+                    f"https://www.ebay.com/sch/i.html?_nkw={encoded_query}&LH_ItemCondition=3000",
+                    f"https://www.ebay.com/sch/i.html?_nkw={encoded_query}&_sop=15",
+                ],
+            }
+
+        if source == "amazon":
+            # junglee/free-amazon-product-scraper — input: startUrls[], maxItems
+            return {
+                "startUrls": [
+                    {"url": f"https://www.amazon.in/s?k={encoded_query}&i=aps"},
+                ],
+                "maxItems": max_items,
+                "country": "IN",
+            }
+
         if source == "facebook":
             return {
                 "startUrls": [
-                    {
-                        "url": f"https://www.facebook.com/marketplace/search/?query={encoded_query}",
-                    }
+                    {"url": f"https://www.facebook.com/marketplace/search/?query={encoded_query}"},
                 ],
                 "resultsLimit": max_items,
-                "query": query,
                 "maxItems": max_items,
-                "limit": max_items,
             }
-        if source == "ebay":
-            return {
-                "urls": [
-                    f"https://www.ebay.com/sch/i.html?_nkw={encoded_query}",
-                    f"https://www.ebay.com/sch/i.html?_nkw={encoded_query}&LH_ItemCondition=3000",
-                ],
-                "query": query,
-                "search": query,
-                "keyword": query,
-                "maxItems": max_items,
-                "max_items": max_items,
-                "limit": max_items,
-                "proxyConfiguration": {"useApifyProxy": True},
-            }
+
+        # Default fallback
         return {
-            "startUrls": [
-                {
-                    "url": f"https://www.olx.in/items/q-{encoded_query}",
-                },
-                {
-                    "url": f"https://www.olx.in/items/q-{quote_plus(query)}",
-                },
-            ],
-            "query": query,
-            "search": query,
-            "keyword": query,
-            "maxItems": max_items,
-            "max_items": max_items,
-            "limit": max_items,
-            "maxPages": 1,
+            "urls": [f"https://www.olx.in/items/q-{encoded_query}"],
+            "max_items_per_url": max_items,
+            "max_retries_per_url": 2,
+            "proxy": {"useApifyProxy": True, "apifyProxyCountry": "IN"},
         }
 
     def _google_marketplace_fallback(
@@ -433,9 +468,9 @@ class ApifyService:
         site-filtered queries before falling back to mocks.
         """
 
-        if source not in {"olx", "ebay", "facebook"}:
+        if source not in {"olx", "ebay", "amazon", "facebook"}:
             return None
-        actor_id = self.settings.apify_google_actor_id
+        actor_id = self._actor_id_for_source("google")
         if not self.settings.apify_api_token or not actor_id:
             return None
 
@@ -489,6 +524,7 @@ class ApifyService:
         source_queries = {
             "olx": f"site:olx.in {marketplace_query} used price",
             "ebay": f"site:ebay.com/itm {marketplace_query} used price",
+            "amazon": f"site:amazon.in {marketplace_query} price",
             "facebook": f"site:facebook.com/marketplace {marketplace_query} used price",
         }
         search_query = source_queries.get(source, f"{marketplace_query} used marketplace")
@@ -595,7 +631,12 @@ class ApifyService:
 
     def _normalize_item(self, query: str, item: dict[str, Any], index: int, source: str = "actor") -> Listing:
         product_key = detect_product_key(query)
-        description = str(self._first(item, "description", "text", "snippet", "shortDescription", "subtitle", "itemDescription") or "")
+        description = str(self._first(
+            item,
+            "description", "text", "snippet", "shortDescription", "subtitle", "itemDescription",
+            # ecomscrape/olx fields
+            "name",
+        ) or "")
         price = self._parse_price(
             self._first(
                 item,
@@ -612,7 +653,12 @@ class ApifyService:
             )
             or description
         )
-        title = str(self._first(item, "title", "name", "productTitle", "itemTitle", "adTitle", "heading") or "Marketplace listing")
+        title = str(self._first(
+            item,
+            "title", "name", "productTitle", "itemTitle", "adTitle", "heading",
+            # delicious_zebu/ebay field
+            "product_title",
+        ) or "Marketplace listing")
         listing_url = self._normalize_listing_url(
             self._first(
                 item,
@@ -628,15 +674,32 @@ class ApifyService:
                 "adUrl",
                 "itemUrl",
                 "href",
+                # delicious_zebu/ebay field
+                "product_url",
             )
         )
-        seller = self._first(item, "seller", "sellerName", "sellerInfo", "seller_name", "user")
+        seller = self._first(item, "seller", "sellerName", "sellerInfo", "seller_name", "user", "brand")
         seller_name = seller.get("name") if isinstance(seller, dict) else seller
-        image_url = self._normalize_image_url(self._first(item, "image", "imageUrl", "thumbnail", "photo", "picture", "images", "imageUrls"))
+        image_url = self._normalize_image_url(self._first(
+            item,
+            "image", "imageUrl", "thumbnail", "photo", "picture", "images", "imageUrls",
+            # ecomscrape/olx field
+            "image_urls",
+            # delicious_zebu/ebay field
+            "image_url",
+            # junglee/amazon field
+            "thumbnailImage",
+        ))
         image_url = image_url or f"gradient://{product_key}-apify"
         location = self._normalize_location(self._first(item, "location", "city", "itemLocation", "sellerLocation", "area", "region"))
+        # For eBay/Amazon where location may be in card_attribute list
+        if location == "Unknown location" and isinstance(item.get("card_attribute"), list):
+            for attr in item["card_attribute"]:
+                if isinstance(attr, str) and "Located in" in attr:
+                    location = attr.replace("Located in ", "").strip()
+                    break
         description = description or title
-        currency = self._currency_from_item(item) or "INR"
+        currency = self._currency_from_item(item) or ("USD" if source == "ebay" else "INR")
 
         return Listing(
             id=f"apify_{hashlib.sha1(f'{query}:{index}:{listing_url}'.encode('utf-8')).hexdigest()[:12]}",

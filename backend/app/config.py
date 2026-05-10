@@ -14,6 +14,7 @@ class Settings(BaseModel):
     apify_default_source: str = "google"
     apify_olx_actor_id: str | None = None
     apify_ebay_actor_id: str | None = None
+    apify_amazon_actor_id: str | None = None
     apify_facebook_actor_id: str | None = None
     apify_google_actor_id: str | None = None
     apify_max_items: int = 10
@@ -81,6 +82,7 @@ def get_settings() -> Settings:
         apify_default_source=os.getenv("APIFY_DEFAULT_SOURCE", "google"),
         apify_olx_actor_id=os.getenv("APIFY_OLX_ACTOR_ID") or None,
         apify_ebay_actor_id=os.getenv("APIFY_EBAY_ACTOR_ID") or None,
+        apify_amazon_actor_id=os.getenv("APIFY_AMAZON_ACTOR_ID") or None,
         apify_facebook_actor_id=os.getenv("APIFY_FACEBOOK_ACTOR_ID") or None,
         apify_google_actor_id=os.getenv("APIFY_GOOGLE_ACTOR_ID") or None,
         apify_max_items=int(os.getenv("APIFY_MAX_ITEMS", "10")),
