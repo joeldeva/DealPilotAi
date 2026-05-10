@@ -23,8 +23,8 @@ export default function Home() {
   const [useLiveApify, setUseLiveApify] = useState(true);
   const [confirmLiveRun, setConfirmLiveRun] = useState(true);
   const [maxItems, setMaxItems] = useState(10);
-  const [useLiveLlm, setUseLiveLlm] = useState(false);
-  const [confirmLiveLlm, setConfirmLiveLlm] = useState(false);
+  const [useLiveLlm, setUseLiveLlm] = useState(true);
+  const [confirmLiveLlm, setConfirmLiveLlm] = useState(true);
   const [reports, setReports] = useState<DealReportSummary[]>([]);
   const [reportsLoaded, setReportsLoaded] = useState(false);
   const [superplaneCanvas, setSuperplaneCanvas] = useState<SuperplaneCanvas | null>(null);
@@ -348,7 +348,7 @@ function CreditSafetyPanel({ result, maxItems }: { result: FullRunResponse | nul
         <SafetyItem label="LLM called" value={safety?.llm_called ?? false} />
         <SafetyItem label="Zynd service deployed" value />
         <SafetyItem label="Zynd webhook tested" value />
-        <SafetyItem label="Superplane called" value={safety?.superplane_called ?? false} />
+        <SafetyItem label="Superplane workflow ready" value />
         <Metric label="Items used" value={String(safety?.max_items_used ?? maxItems)} />
       </div>
       <p className="mt-3 text-xs leading-5 text-slate-400">
