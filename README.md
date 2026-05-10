@@ -1,10 +1,6 @@
 # DealPilot AI
 
-Team: Neural Negotiators
-
-DealPilot AI is an autonomous deal intelligence agent that researches marketplace listings, detects risky offers, ranks the best deals, and generates personalized negotiation strategies to help users buy smarter and safer.
-
-## One-Line Pitch
+Team: CODEB
 
 DealPilot AI is an autonomous deal intelligence agent that researches marketplace listings, detects risky offers, ranks the best deals, and generates personalized negotiation strategies to help users buy smarter and safer.
 
