@@ -51,6 +51,9 @@ class ApifyService:
         source_key = self._source_key(source)
         actor_id = self._actor_id_for_source(source_key)
 
+        if source_key == "multi":
+            return self._multi_source_response(query, max_items_requested, max_items_used, confirm_live_run)
+
         if not self.settings.apify_live_mode:
             return self._mock_response(query, max_items_requested, max_items_used, "APIFY_LIVE_MODE is false.")
 
@@ -160,6 +163,7 @@ class ApifyService:
             "actor_configured": bool(self.settings.apify_actor_id),
             "sources": {
                 "default": self._source_key(None),
+                "multi_source_available": True,
                 "olx_configured": bool(self.settings.apify_olx_actor_id),
                 "ebay_configured": bool(self.settings.apify_ebay_actor_id),
                 "facebook_configured": bool(self.settings.apify_facebook_actor_id),
@@ -218,6 +222,89 @@ class ApifyService:
             "message": message,
         }
 
+    def _multi_source_response(self, query: str, max_items_requested: int, max_items_used: int, confirm_live_run: bool) -> dict[str, Any]:
+        if not self.settings.apify_live_mode:
+            return self._mock_response(query, max_items_requested, max_items_used, "APIFY_LIVE_MODE is false.")
+
+        if not confirm_live_run:
+            return self._mock_response(query, max_items_requested, max_items_used, "Live run was not confirmed.")
+
+        if not self.settings.apify_api_token:
+            return self._mock_response(query, max_items_requested, max_items_used, "Apify token is missing for multi-source search.")
+
+        sources = self._configured_sources()
+        if not sources:
+            return self._mock_response(query, max_items_requested, max_items_used, "No configured Apify source actors were available for multi-source search.")
+
+        combined: list[Listing] = []
+        seen: set[str] = set()
+        apify_called = False
+        cache_used = False
+        source_messages: list[str] = []
+
+        for source in sources:
+            remaining = max_items_used - len(combined)
+            if remaining <= 0:
+                break
+            per_source_limit = max(1, min(remaining, max(3, max_items_used // len(sources))))
+            result = self.search_marketplace_listings(
+                query=query,
+                max_items=per_source_limit,
+                confirm_live_run=confirm_live_run,
+                source=source,
+            )
+            source_messages.append(result["message"])
+            apify_called = apify_called or result["apify_called"]
+            cache_used = cache_used or result["apify_cache_used"]
+            if result["data_source"] == "mock_fallback":
+                continue
+            for listing in result["listings"]:
+                key = self._dedupe_key(listing)
+                if key in seen:
+                    continue
+                seen.add(key)
+                combined.append(listing)
+                if len(combined) >= max_items_used:
+                    break
+
+        if not combined:
+            return self._mock_response(query, max_items_requested, max_items_used, "Multi-source Apify search returned no usable listings; fallback returned.")
+
+        data_source = "apify_live" if apify_called else "apify_cache"
+        return {
+            "listings": combined[:max_items_used],
+            "data_source": data_source,
+            "apify_called": apify_called,
+            "apify_cache_used": cache_used,
+            "max_items_requested": max_items_requested,
+            "max_items_used": len(combined[:max_items_used]),
+            "live_run_confirmed": confirm_live_run,
+            "message": f"Multi-source Apify search used {', '.join(sources)}. " + " ".join(source_messages[:3]),
+        }
+
+    def _configured_sources(self) -> list[str]:
+        explicit_actor_ids = {
+            "google": self.settings.apify_google_actor_id,
+            "olx": self.settings.apify_olx_actor_id,
+            "ebay": self.settings.apify_ebay_actor_id,
+            "facebook": self.settings.apify_facebook_actor_id,
+        }
+        preferred = ["google", "olx", "ebay", "facebook"]
+        configured = [source for source in preferred if explicit_actor_ids[source]]
+        if configured:
+            return configured
+
+        default_source = self._source_key(None)
+        if default_source != "multi" and self._actor_id_for_source(default_source):
+            return [default_source]
+        return []
+
+    def _dedupe_key(self, listing: Listing) -> str:
+        if listing.listing_url and listing.listing_url != "#":
+            return listing.listing_url.lower().rstrip("/")
+        normalized_title = re.sub(r"\W+", "", listing.title.lower())[:80]
+        return f"{normalized_title}:{listing.price}:{listing.location.lower()}"
+
     def _clamp_max_items(self, max_items: int) -> int:
         configured = max(1, self.settings.apify_max_items)
         requested = max(1, max_items)
@@ -226,6 +313,10 @@ class ApifyService:
     def _source_key(self, source: str | None) -> str:
         requested = (source or self.settings.apify_default_source or "google").strip().lower()
         aliases = {
+            "all": "multi",
+            "multiple": "multi",
+            "multi_source": "multi",
+            "multi-source": "multi",
             "fb": "facebook",
             "facebook_marketplace": "facebook",
             "facebook-marketplace": "facebook",
@@ -233,7 +324,7 @@ class ApifyService:
             "google-shopping": "google",
         }
         normalized = aliases.get(requested, requested)
-        return normalized if normalized in {"olx", "ebay", "facebook", "google"} else "google"
+        return normalized if normalized in {"olx", "ebay", "facebook", "google", "multi"} else "google"
 
     def _actor_id_for_source(self, source: str) -> str | None:
         actors = {

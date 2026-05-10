@@ -169,7 +169,7 @@ export type FullRunRequest = {
   user_goal: string;
   use_live_apify: boolean;
   confirm_live_run: boolean;
-  apify_source?: "olx" | "ebay" | "facebook" | "google";
+  apify_source?: "olx" | "ebay" | "facebook" | "google" | "multi";
   max_items: number;
   use_live_llm: boolean;
   confirm_live_llm: boolean;
