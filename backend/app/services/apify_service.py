@@ -116,6 +116,17 @@ class ApifyService:
             expanded_items = self._expand_raw_items(raw_items, max_items_used)
             listings = [self._normalize_item(query, item, index, source_key) for index, item in enumerate(expanded_items)]
             listings = listings[:max_items_used]
+            if not listings:
+                source_fallback = self._google_marketplace_fallback(
+                    query=query,
+                    source=source_key,
+                    max_items_requested=max_items_requested,
+                    max_items_used=max_items_used,
+                    confirm_live_run=confirm_live_run,
+                    reason="Dedicated source actor returned no usable listings.",
+                )
+                if source_fallback is not None:
+                    return source_fallback
             if self.settings.apify_cache_enabled:
                 self._write_cache(query, source_key, listings)
             self._write_audit_event(
@@ -154,6 +165,16 @@ class ApifyService:
                 message=f"Apify {source_key} run failed; mock fallback returned.",
                 error_type=type(exc).__name__,
             )
+            source_fallback = self._google_marketplace_fallback(
+                query=query,
+                source=source_key,
+                max_items_requested=max_items_requested,
+                max_items_used=max_items_used,
+                confirm_live_run=confirm_live_run,
+                reason=f"Dedicated {source_key} actor failed with {type(exc).__name__}.",
+            )
+            if source_fallback is not None:
+                return source_fallback
             return self._mock_response(query, max_items_requested, max_items_used, f"Apify {source_key} run failed; mock fallback returned.")
 
     def status(self) -> dict[str, Any]:
@@ -393,6 +414,94 @@ class ApifyService:
             "max_items": max_items,
             "limit": max_items,
             "maxPages": 1,
+        }
+
+    def _google_marketplace_fallback(
+        self,
+        query: str,
+        source: str,
+        max_items_requested: int,
+        max_items_used: int,
+        confirm_live_run: bool,
+        reason: str,
+    ) -> dict[str, Any] | None:
+        """Use Google Search actor as a source-specific safety net.
+
+        Some community marketplace actors can fail because of account access,
+        target-site blocking, or schema drift. The Google actor is our proven
+        Apify path, so we can still collect live marketplace links with
+        site-filtered queries before falling back to mocks.
+        """
+
+        if source not in {"olx", "ebay", "facebook"}:
+            return None
+        actor_id = self.settings.apify_google_actor_id
+        if not self.settings.apify_api_token or not actor_id:
+            return None
+
+        try:
+            from apify_client import ApifyClient
+
+            client = ApifyClient(self.settings.apify_api_token)
+            run = client.actor(actor_id).call(
+                run_input=self._google_marketplace_input(query, source, max_items_used),
+                max_total_charge_usd=self.settings.apify_max_total_charge_usd,
+            )
+            dataset_id = getattr(run, "default_dataset_id", None)
+            if dataset_id is None and isinstance(run, dict):
+                dataset_id = run.get("defaultDatasetId") or run.get("default_dataset_id")
+            raw_items = list(client.dataset(dataset_id).iterate_items(limit=max_items_used)) if dataset_id else []
+            expanded_items = self._expand_raw_items(raw_items, max_items_used)
+            listings = [self._normalize_item(query, item, index, source) for index, item in enumerate(expanded_items)]
+            listings = [listing for listing in listings if listing.listing_url and listing.listing_url != "#"]
+            listings = listings[:max_items_used]
+            if not listings:
+                return None
+            if self.settings.apify_cache_enabled:
+                self._write_cache(query, source, listings)
+            self._write_audit_event(
+                query=query,
+                source=source,
+                actor_id=actor_id,
+                max_items_requested=max_items_requested,
+                max_items_used=len(listings),
+                confirm_live_run=confirm_live_run,
+                outcome="google_site_fallback_completed",
+                apify_called=True,
+                data_source="apify_live",
+                message=f"{reason} Google site-filter Apify fallback returned {source} listing links.",
+            )
+            return {
+                "listings": listings,
+                "data_source": "apify_live",
+                "apify_called": True,
+                "apify_cache_used": False,
+                "max_items_requested": max_items_requested,
+                "max_items_used": len(listings),
+                "live_run_confirmed": confirm_live_run,
+                "message": f"{reason} Used Google Apify site-filter fallback for {source}.",
+            }
+        except Exception:
+            return None
+
+    def _google_marketplace_input(self, query: str, source: str, max_items: int) -> dict[str, Any]:
+        marketplace_query = _simplify_marketplace_query(query)
+        source_queries = {
+            "olx": f"site:olx.in {marketplace_query} used price",
+            "ebay": f"site:ebay.com/itm {marketplace_query} used price",
+            "facebook": f"site:facebook.com/marketplace {marketplace_query} used price",
+        }
+        search_query = source_queries.get(source, f"{marketplace_query} used marketplace")
+        return {
+            "queries": search_query,
+            "countryCode": "in",
+            "languageCode": "en",
+            "maxPagesPerQuery": 1,
+            "resultsPerPage": min(max_items, 10),
+            "mobileResults": False,
+            "includeUnfilteredResults": False,
+            "saveHtml": False,
+            "saveHtmlToKeyValueStore": False,
         }
 
     def _expand_raw_items(self, raw_items: list[dict[str, Any]], max_items: int) -> list[dict[str, Any]]:
