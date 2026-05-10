@@ -5,7 +5,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import quote_plus, urlparse
 
 from app.config import get_settings
 from app.models.listing import Listing
@@ -336,6 +336,8 @@ class ApifyService:
         return actors.get(source) or self.settings.apify_actor_id
 
     def _run_input_for_source(self, query: str, source: str, max_items: int) -> dict[str, Any]:
+        marketplace_query = _simplify_marketplace_query(query)
+        encoded_query = quote_plus(marketplace_query)
         if source == "google":
             search_query = f"{query} used marketplace India OLX OR eBay"
             return {
@@ -351,32 +353,51 @@ class ApifyService:
             }
         if source == "facebook":
             return {
+                "startUrls": [
+                    {
+                        "url": f"https://www.facebook.com/marketplace/search/?query={encoded_query}",
+                    }
+                ],
+                "resultsLimit": max_items,
                 "query": query,
                 "maxItems": max_items,
-                "max_items": max_items,
                 "limit": max_items,
             }
         if source == "ebay":
             return {
+                "urls": [
+                    f"https://www.ebay.com/sch/i.html?_nkw={encoded_query}",
+                    f"https://www.ebay.com/sch/i.html?_nkw={encoded_query}&LH_ItemCondition=3000",
+                ],
                 "query": query,
                 "search": query,
                 "keyword": query,
                 "maxItems": max_items,
                 "max_items": max_items,
                 "limit": max_items,
+                "proxyConfiguration": {"useApifyProxy": True},
             }
         return {
+            "startUrls": [
+                {
+                    "url": f"https://www.olx.in/items/q-{encoded_query}",
+                },
+                {
+                    "url": f"https://www.olx.in/items/q-{quote_plus(query)}",
+                },
+            ],
             "query": query,
             "search": query,
             "keyword": query,
             "maxItems": max_items,
             "max_items": max_items,
             "limit": max_items,
+            "maxPages": 1,
         }
 
     def _expand_raw_items(self, raw_items: list[dict[str, Any]], max_items: int) -> list[dict[str, Any]]:
         expanded: list[dict[str, Any]] = []
-        nested_keys = ("organicResults", "shoppingResults", "paidResults", "results", "items")
+        nested_keys = ("organicResults", "shoppingResults", "paidResults", "results", "items", "products", "listings", "ads", "data")
         for item in raw_items:
             nested_found = False
             for key in nested_keys:
@@ -465,9 +486,24 @@ class ApifyService:
 
     def _normalize_item(self, query: str, item: dict[str, Any], index: int, source: str = "actor") -> Listing:
         product_key = detect_product_key(query)
-        description = str(self._first(item, "description", "text", "snippet") or "")
-        price = self._parse_price(self._first(item, "price", "amount") or description)
-        title = str(self._first(item, "title", "name") or "Marketplace listing")
+        description = str(self._first(item, "description", "text", "snippet", "shortDescription", "subtitle", "itemDescription") or "")
+        price = self._parse_price(
+            self._first(
+                item,
+                "price",
+                "amount",
+                "currentPrice",
+                "itemPrice",
+                "priceText",
+                "price_text",
+                "formattedPrice",
+                "displayPrice",
+                "buyItNowPrice",
+                "value",
+            )
+            or description
+        )
+        title = str(self._first(item, "title", "name", "productTitle", "itemTitle", "adTitle", "heading") or "Marketplace listing")
         listing_url = self._normalize_listing_url(
             self._first(
                 item,
@@ -480,28 +516,33 @@ class ApifyService:
                 "sourceUrl",
                 "source_url",
                 "displayedUrl",
+                "adUrl",
+                "itemUrl",
+                "href",
             )
         )
-        seller = self._first(item, "seller", "sellerName")
+        seller = self._first(item, "seller", "sellerName", "sellerInfo", "seller_name", "user")
         seller_name = seller.get("name") if isinstance(seller, dict) else seller
-        image_url = str(self._first(item, "image", "imageUrl", "thumbnail") or f"gradient://{product_key}-apify")
-        location = str(self._first(item, "location", "city") or "Unknown location")
+        image_url = self._normalize_image_url(self._first(item, "image", "imageUrl", "thumbnail", "photo", "picture", "images", "imageUrls"))
+        image_url = image_url or f"gradient://{product_key}-apify"
+        location = self._normalize_location(self._first(item, "location", "city", "itemLocation", "sellerLocation", "area", "region"))
         description = description or title
+        currency = self._currency_from_item(item) or "INR"
 
         return Listing(
             id=f"apify_{hashlib.sha1(f'{query}:{index}:{listing_url}'.encode('utf-8')).hexdigest()[:12]}",
             title=title,
             price=price,
-            currency="INR",
+            currency=currency,
             location=location,
             description=description,
             seller_name=str(seller_name or "Marketplace seller"),
-            seller_rating=self._parse_rating(self._first(item, "seller_rating", "sellerRating", "rating")),
+            seller_rating=self._parse_rating(self._first(item, "seller_rating", "sellerRating", "rating", "sellerRatingScore")),
             image_url=image_url,
             listing_url=listing_url,
             source=f"apify_{source}",
-            condition=str(self._first(item, "condition", "itemCondition") or "used"),
-            posted_time=str(self._first(item, "posted_time", "postedTime", "createdAt") or "recently"),
+            condition=str(self._first(item, "condition", "itemCondition", "item_condition", "conditionText") or "used"),
+            posted_time=str(self._first(item, "posted_time", "postedTime", "createdAt", "datePosted", "postedDate", "time") or "recently"),
             data_source="apify_live",
             product_key=product_key,
         )
@@ -537,8 +578,18 @@ class ApifyService:
     def _parse_price(self, value: Any) -> int:
         if isinstance(value, (int, float)):
             return max(0, int(value))
+        if isinstance(value, dict):
+            for key in ("value", "amount", "price", "raw", "text", "formatted", "display"):
+                if key in value:
+                    parsed = self._parse_price(value[key])
+                    if parsed:
+                        return parsed
+            return 0
+        if isinstance(value, list):
+            parsed_values = [self._parse_price(item) for item in value]
+            return max(parsed_values) if parsed_values else 0
         text = str(value or "0")
-        currency_match = re.search(r"(?:₹|INR|Rs\.?)\s*([0-9][0-9,\.\s]*)", text, flags=re.IGNORECASE)
+        currency_match = re.search(r"(?:₹|INR|Rs\.?|US\s*\$|\$)\s*([0-9][0-9,\.\s]*)", text, flags=re.IGNORECASE)
         if currency_match:
             amount = re.sub(r"\D", "", currency_match.group(1))
             if amount:
@@ -559,3 +610,43 @@ class ApifyService:
             return rating if 0 <= rating <= 5 else None
         except (TypeError, ValueError):
             return None
+
+    def _normalize_image_url(self, value: Any) -> str:
+        if isinstance(value, list):
+            for item in value:
+                image = self._normalize_image_url(item)
+                if image:
+                    return image
+            return ""
+        if isinstance(value, dict):
+            for key in ("url", "src", "imageUrl", "thumbnail", "large", "original"):
+                if value.get(key):
+                    return str(value[key])
+            return ""
+        return str(value or "")
+
+    def _normalize_location(self, value: Any) -> str:
+        if isinstance(value, dict):
+            parts = [str(value.get(key) or "").strip() for key in ("city", "region", "state", "country", "name")]
+            return ", ".join(part for part in parts if part) or "Unknown location"
+        return str(value or "Unknown location")
+
+    def _currency_from_item(self, item: dict[str, Any]) -> str | None:
+        for key in ("currency", "currencyCode", "priceCurrency"):
+            value = item.get(key)
+            if value:
+                return str(value).upper()
+        price = item.get("price")
+        if isinstance(price, dict):
+            for key in ("currency", "currencyCode"):
+                if price.get(key):
+                    return str(price[key]).upper()
+        return None
+
+
+def _simplify_marketplace_query(query: str) -> str:
+    cleaned = re.sub(r"\b(find|me|a|an|used|under|below|inr|rs|with|good|condition)\b", " ", query, flags=re.IGNORECASE)
+    cleaned = re.sub(r"[₹$,]+", " ", cleaned)
+    cleaned = re.sub(r"\b\d{4,7}\b", " ", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned or query
