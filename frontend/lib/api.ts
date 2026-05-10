@@ -10,7 +10,6 @@ export async function runFullDemo(request: FullRunRequest): Promise<FullRunRespo
     },
     body: JSON.stringify({
       user_goal: request.user_goal,
-      mode: "mock",
       use_live_apify: request.use_live_apify,
       confirm_live_run: request.confirm_live_run,
       apify_source: request.apify_source ?? "olx",

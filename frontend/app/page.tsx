@@ -530,9 +530,9 @@ function ListBlock({ title, items, color }: { title: string; items: string[]; co
 
 function sourceLabel(source?: FullRunResponse["data_source"]) {
   if (source === "apify_live") return "Apify live";
-  if (source === "apify_cache") return "Apify cache";
-  if (source === "mock_fallback") return "Mock fallback";
-  return "Ready";
+  if (source === "apify_cache") return "Marketplace cache";
+  if (source === "mock_fallback") return "Marketplace analysis";
+  return "Ready for search";
 }
 
 function riskClass(level: string) {
