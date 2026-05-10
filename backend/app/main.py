@@ -108,6 +108,21 @@ def mock_products() -> list[dict[str, str]]:
     return mock_data_service.list_products()
 
 
+@app.get("/api/demo/evidence")
+def demo_evidence() -> dict:
+    return {
+        "phase_2_features": [
+            "market_benchmark_scoring",
+            "product_specific_safety_checklist",
+            "why_not_cheapest_reasoning",
+            "real_data_evidence_label",
+        ],
+        "agent_card": "/api/agent-card",
+        "well_known_agent": "/.well-known/agent.json",
+        "latest_reports": storage_service.list_reports(limit=3),
+    }
+
+
 @app.get("/api/reports", response_model=DealReportListResponse)
 def list_reports(limit: int = 20) -> DealReportListResponse:
     reports = storage_service.list_reports(limit=limit)

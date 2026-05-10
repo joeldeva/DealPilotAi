@@ -205,6 +205,7 @@ export default function Home() {
 
           {result && topDeal ? (
             <div className="flex flex-col gap-6">
+              <PhaseTwoInsights result={result} />
               <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <BestDealCard deal={topDeal} result={result} />
                 <NegotiationCard deal={topDeal} />
@@ -228,6 +229,144 @@ export default function Home() {
         <AboutProject />
       </div>
     </main>
+  );
+}
+
+function PhaseTwoInsights({ result }: { result: FullRunResponse }) {
+  const benchmark = result.market_benchmark;
+  const checklist = result.product_safety_checklist;
+  const whyNotCheapest = result.why_not_cheapest;
+
+  if (!benchmark && !checklist && !whyNotCheapest) return null;
+
+  return (
+    <section className="grid grid-cols-1 gap-6 xl:grid-cols-[0.9fr_1.1fr_1fr]">
+      {benchmark ? <MarketBenchmarkCard result={result} /> : null}
+      {checklist ? <SafetyChecklistCard result={result} /> : null}
+      {whyNotCheapest ? <WhyNotCheapestCard result={result} /> : null}
+    </section>
+  );
+}
+
+function MarketBenchmarkCard({ result }: { result: FullRunResponse }) {
+  const benchmark = result.market_benchmark;
+  if (!benchmark) return null;
+
+  const best = benchmark.best_listing_benchmark;
+  const percent = best?.price_vs_median_percent ?? 0;
+
+  return (
+    <article className="glass-panel-3d p-5 md:p-6">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.15em] text-cyan-300">Market benchmark</p>
+          <h3 className="text-xl font-bold text-white">Price intelligence wheel</h3>
+        </div>
+        <BarChart3 className="text-cyan-300" size={24} />
+      </div>
+
+      <div className="flex flex-col items-center gap-5 sm:flex-row xl:flex-col">
+        <BenchmarkWheel percent={percent} />
+        <div className="w-full flex-1 space-y-3">
+          <p className="text-sm leading-6 text-slate-300">{benchmark.summary}</p>
+          <div className="grid grid-cols-3 gap-2">
+            <Metric label="Low" value={formatInr(benchmark.lowest_price)} />
+            <Metric label="Median" value={formatInr(benchmark.median_price)} highlight />
+            <Metric label="High" value={formatInr(benchmark.highest_price)} />
+          </div>
+          <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-3 text-xs text-cyan-100">
+            <span className="font-bold uppercase tracking-wider text-cyan-300">{best?.price_band.replaceAll("_", " ") ?? "Market band"}</span>
+            <span className="mt-1 block text-slate-300">{result.real_data_evidence?.evidence_label ?? sourceLabel(result.data_source)}</span>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function BenchmarkWheel({ percent }: { percent: number }) {
+  const magnitude = Math.min(100, Math.max(8, Math.round((Math.abs(percent) / 35) * 100)));
+  const belowMedian = percent < 0;
+  const label = percent === 0 ? "at median" : `${Math.abs(percent).toFixed(1)}% ${belowMedian ? "below" : "above"}`;
+  const gradientColor = belowMedian ? "#22d3ee" : "#f59e0b";
+
+  return (
+    <div className="relative grid h-40 w-40 flex-shrink-0 place-items-center rounded-full border border-white/10 bg-slate-950/40">
+      <div
+        className="absolute inset-3 rounded-full"
+        style={{
+          background: `conic-gradient(${gradientColor} ${magnitude * 3.6}deg, rgba(148, 163, 184, 0.14) 0deg)`,
+        }}
+      />
+      <div className="absolute inset-7 rounded-full border border-white/10 bg-[#100a18]" />
+      <div className="relative text-center">
+        <div className={`text-2xl font-black ${belowMedian ? "text-cyan-200" : "text-amber-200"}`}>
+          {Math.abs(percent).toFixed(1)}%
+        </div>
+        <div className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
+      </div>
+    </div>
+  );
+}
+
+function SafetyChecklistCard({ result }: { result: FullRunResponse }) {
+  const checklist = result.product_safety_checklist;
+  if (!checklist) return null;
+
+  return (
+    <article className="glass-panel-3d p-5 md:p-6">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.15em] text-emerald-300">Buyer checklist</p>
+          <h3 className="text-xl font-bold text-white">{checklist.target_model} safety checks</h3>
+        </div>
+        <ShieldCheck className="text-emerald-300" size={24} />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {checklist.checklist_items.slice(0, 8).map((item) => (
+          <div key={item.label} className="rounded-xl border border-white/10 bg-white/5 p-3">
+            <div className="mb-1 flex items-center gap-2">
+              <span className={`h-2 w-2 rounded-full ${item.priority === "high" ? "bg-emerald-300" : "bg-indigo-300"}`} />
+              <span className="text-sm font-bold text-white">{item.label}</span>
+            </div>
+            <p className="text-xs leading-5 text-slate-400">{item.reason}</p>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function WhyNotCheapestCard({ result }: { result: FullRunResponse }) {
+  const insight = result.why_not_cheapest;
+  if (!insight) return null;
+
+  return (
+    <article className="glass-panel-3d p-5 md:p-6">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.15em] text-pink-300">Decision logic</p>
+          <h3 className="text-xl font-bold text-white">Why not cheapest?</h3>
+        </div>
+        <Trophy className="text-pink-300" size={24} />
+      </div>
+
+      <div className="mb-4 grid grid-cols-2 gap-3">
+        <Metric label={insight.cheapest_selected ? "Selected deal" : "Cheapest"} value={insight.cheapest_price ? formatInr(insight.cheapest_price) : "N/A"} />
+        <Metric label="Best ranked" value={insight.best_price ? formatInr(insight.best_price) : "N/A"} highlight />
+      </div>
+
+      <p className="mb-4 text-sm leading-6 text-slate-300">{insight.explanation}</p>
+
+      <div className="space-y-2">
+        {insight.decision_factors.slice(0, 4).map((factor) => (
+          <div key={factor} className="rounded-lg border border-pink-500/20 bg-pink-500/10 px-3 py-2 text-xs leading-5 text-pink-50">
+            {factor}
+          </div>
+        ))}
+      </div>
+    </article>
   );
 }
 

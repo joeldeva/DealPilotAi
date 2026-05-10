@@ -43,3 +43,57 @@ class RankingAnalysis(BaseModel):
     final_score: float
     recommendation_label: str
     ranking_reason: str
+
+
+class ListingBenchmark(BaseModel):
+    listing_id: str
+    title: str
+    price: int
+    price_vs_median_percent: float
+    price_band: str
+    outlier_status: str
+
+
+class MarketBenchmark(BaseModel):
+    median_price: int
+    lowest_price: int
+    highest_price: int
+    listing_count: int
+    currency: str = "INR"
+    listing_benchmarks: list[ListingBenchmark] = Field(default_factory=list)
+    best_listing_benchmark: ListingBenchmark | None = None
+    summary: str
+
+
+class SafetyChecklistItem(BaseModel):
+    label: str
+    reason: str
+    priority: str
+
+
+class ProductSafetyChecklist(BaseModel):
+    product_type: str
+    target_model: str
+    checklist_items: list[SafetyChecklistItem] = Field(default_factory=list)
+    summary: str
+
+
+class WhyNotCheapest(BaseModel):
+    cheapest_listing_id: str | None = None
+    cheapest_listing_title: str | None = None
+    cheapest_price: int | None = None
+    best_listing_id: str | None = None
+    best_listing_title: str | None = None
+    best_price: int | None = None
+    cheapest_selected: bool = False
+    explanation: str
+    decision_factors: list[str] = Field(default_factory=list)
+
+
+class RealDataEvidence(BaseModel):
+    data_source: str
+    apify_called: bool
+    apify_cache_used: bool
+    listings_analyzed: int
+    live_run_confirmed: bool
+    evidence_label: str

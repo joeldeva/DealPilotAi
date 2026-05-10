@@ -1,11 +1,14 @@
 from app.agents.deal_analyzer import analyze_deal, polish_deal_reasoning
 from app.agents.decision_ranker import rank_listings
 from app.agents.intent_parser import parse_intent
+from app.agents.market_benchmark import calculate_market_benchmark
 from app.agents.negotiation_agent import generate_negotiation_draft, polish_opening_message
+from app.agents.product_safety_checklist import build_product_safety_checklist
 from app.agents.scam_detector import detect_scam_risk
+from app.agents.why_not_cheapest import explain_why_not_cheapest
 from app.config import get_settings
 from app.models.api import AgentTraceStep, CreditSafety, FullRunResponse, RankedDeal, SearchResponse
-from app.models.analysis import ParsedIntent
+from app.models.analysis import ParsedIntent, RealDataEvidence
 from app.models.listing import Listing
 from app.services.apify_service import ApifyService
 from app.services.llm_service import LLMService
@@ -218,6 +221,14 @@ class DealPilotOrchestrator:
         )
 
         best_recommendation = ranked_results[0] if ranked_results else None
+        market_benchmark = calculate_market_benchmark(
+            listings,
+            best_listing_id=best_recommendation.listing.id if best_recommendation else None,
+        )
+        product_safety_checklist = build_product_safety_checklist(parsed_intent)
+        why_not_cheapest = explain_why_not_cheapest(ranked_results)
+        trace.append(self._trace("Market Benchmark", market_benchmark.summary))
+        trace.append(self._trace("Buyer Safety Checklist", product_safety_checklist.summary))
         emit_event(
             "DEMO_RUN_COMPLETED",
             "completed",
@@ -229,6 +240,20 @@ class DealPilotOrchestrator:
             },
         )
 
+        credit_safety = self._credit_safety(
+            apify_result,
+            llm_called=llm_called,
+            live_llm_confirmed=confirm_live_llm if use_live_llm else False,
+        )
+        real_data_evidence = RealDataEvidence(
+            data_source=apify_result["data_source"],
+            apify_called=credit_safety.apify_called,
+            apify_cache_used=credit_safety.apify_cache_used,
+            listings_analyzed=len(ranked_results),
+            live_run_confirmed=credit_safety.live_run_confirmed,
+            evidence_label=self._evidence_label(apify_result["data_source"], credit_safety.apify_called, credit_safety.apify_cache_used),
+        )
+
         response = FullRunResponse(
             user_goal=user_goal,
             parsed_intent=parsed_intent,
@@ -237,13 +262,13 @@ class DealPilotOrchestrator:
             ranked_results=ranked_results,
             best_recommendation=best_recommendation,
             avoid_listings=avoid_ids,
+            market_benchmark=market_benchmark,
+            product_safety_checklist=product_safety_checklist,
+            why_not_cheapest=why_not_cheapest,
+            real_data_evidence=real_data_evidence,
             agent_trace=trace,
             workflow_events=get_events(),
-            credit_safety=self._credit_safety(
-                apify_result,
-                llm_called=llm_called,
-                live_llm_confirmed=confirm_live_llm if use_live_llm else False,
-            ),
+            credit_safety=credit_safety,
             mode_flags={
                 "APIFY_LIVE_MODE": self.settings.apify_live_mode,
                 "GEMINI_LIVE_MODE": self.settings.gemini_live_mode,
@@ -311,3 +336,10 @@ class DealPilotOrchestrator:
 
     def _trace(self, step: str, details: str) -> AgentTraceStep:
         return AgentTraceStep(step=step, status="completed", details=details, summary=details)
+
+    def _evidence_label(self, data_source: str, apify_called: bool, apify_cache_used: bool) -> str:
+        if data_source == "apify_live" and apify_called:
+            return "Live marketplace data collected through Apify."
+        if data_source == "apify_cache" or apify_cache_used:
+            return "Cached Apify marketplace data reused for this run."
+        return "Marketplace analysis completed with the available listing source."

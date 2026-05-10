@@ -81,6 +81,60 @@ export type RankedDeal = {
   negotiation: NegotiationDraft;
 };
 
+export type ListingBenchmark = {
+  listing_id: string;
+  title: string;
+  price: number;
+  price_vs_median_percent: number;
+  price_band: string;
+  outlier_status: string;
+};
+
+export type MarketBenchmark = {
+  median_price: number;
+  lowest_price: number;
+  highest_price: number;
+  listing_count: number;
+  currency: string;
+  listing_benchmarks: ListingBenchmark[];
+  best_listing_benchmark: ListingBenchmark | null;
+  summary: string;
+};
+
+export type SafetyChecklistItem = {
+  label: string;
+  reason: string;
+  priority: "high" | "medium" | string;
+};
+
+export type ProductSafetyChecklist = {
+  product_type: string;
+  target_model: string;
+  checklist_items: SafetyChecklistItem[];
+  summary: string;
+};
+
+export type WhyNotCheapest = {
+  cheapest_listing_id: string | null;
+  cheapest_listing_title: string | null;
+  cheapest_price: number | null;
+  best_listing_id: string | null;
+  best_listing_title: string | null;
+  best_price: number | null;
+  cheapest_selected: boolean;
+  explanation: string;
+  decision_factors: string[];
+};
+
+export type RealDataEvidence = {
+  data_source: "mock_fallback" | "apify_cache" | "apify_live" | string;
+  apify_called: boolean;
+  apify_cache_used: boolean;
+  listings_analyzed: number;
+  live_run_confirmed: boolean;
+  evidence_label: string;
+};
+
 export type AgentTraceStep = {
   step: string;
   status: string;
@@ -132,6 +186,10 @@ export type FullRunResponse = {
   ranked_results: RankedDeal[];
   best_recommendation: RankedDeal | null;
   avoid_listings: string[];
+  market_benchmark: MarketBenchmark | null;
+  product_safety_checklist: ProductSafetyChecklist | null;
+  why_not_cheapest: WhyNotCheapest | null;
+  real_data_evidence: RealDataEvidence | null;
   agent_trace: AgentTraceStep[];
   workflow_events: WorkflowEvent[];
   credit_safety: CreditSafety;

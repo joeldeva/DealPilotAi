@@ -1,7 +1,16 @@
 from typing import Any
 from pydantic import BaseModel, Field
 
-from .analysis import DealAnalysis, ParsedIntent, RankingAnalysis, RiskAnalysis
+from .analysis import (
+    DealAnalysis,
+    MarketBenchmark,
+    ParsedIntent,
+    ProductSafetyChecklist,
+    RankingAnalysis,
+    RealDataEvidence,
+    RiskAnalysis,
+    WhyNotCheapest,
+)
 from .listing import Listing
 from .negotiation import NegotiationDraft
 
@@ -124,6 +133,10 @@ class FullRunResponse(BaseModel):
     ranked_results: list[RankedDeal]
     best_recommendation: RankedDeal | None = None
     avoid_listings: list[str] = Field(default_factory=list)
+    market_benchmark: MarketBenchmark | None = None
+    product_safety_checklist: ProductSafetyChecklist | None = None
+    why_not_cheapest: WhyNotCheapest | None = None
+    real_data_evidence: RealDataEvidence | None = None
     agent_trace: list[AgentTraceStep]
     workflow_events: list[WorkflowEvent] = Field(default_factory=list)
     credit_safety: CreditSafety = Field(default_factory=CreditSafety)
