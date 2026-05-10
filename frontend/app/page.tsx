@@ -7,7 +7,9 @@ import {
   CheckCircle2,
   Clock3,
   ExternalLink,
+  Github,
   History,
+  Linkedin,
   Loader2,
   MessageSquareText,
   Search,
@@ -174,11 +176,6 @@ export default function Home() {
           />
         </section>
 
-        <section className="grid grid-cols-1 gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-          <WorkflowPanel loading={loading} hasResult={Boolean(result)} />
-          <SearchHistoryPanel history={searchHistory} loading={loading} onRun={handleRun} onClear={clearHistory} />
-        </section>
-
         {error ? (
           <div className="flex items-center gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-red-200">
             <AlertTriangle size={20} />
@@ -222,6 +219,13 @@ export default function Home() {
             </div>
           )}
         </section>
+
+        <section className="grid grid-cols-1 gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+          <WorkflowPanel loading={loading} hasResult={Boolean(result)} />
+          <SearchHistoryPanel history={searchHistory} loading={loading} onRun={handleRun} onClear={clearHistory} />
+        </section>
+
+        <AboutProject />
       </div>
     </main>
   );
@@ -451,6 +455,46 @@ function TraceSummary({ result }: { result: FullRunResponse }) {
             <p className="text-xs leading-relaxed text-slate-400">{event.details ?? event.status}</p>
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function AboutProject() {
+  return (
+    <section className="glass-panel-3d p-5 md:p-8">
+      <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr] lg:items-center">
+        <div>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.15em] text-purple-300">About DealPilot AI</p>
+          <h2 className="text-2xl font-bold text-white">A buyer-side agent for safer second-hand purchases</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-400">
+            DealPilot AI turns a buying goal into an agentic workflow: it searches marketplace data, normalizes listings,
+            scores deal quality, detects risk signals, ranks the best opportunities, and drafts ethical negotiation
+            messages. It is built for second-hand electronics today, with room to expand into vehicles, furniture,
+            rentals, and local commerce.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
+          <a
+            href="https://www.linkedin.com/in/joeldeva/"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white transition-colors hover:border-blue-400/50 hover:bg-blue-500/10"
+          >
+            <Linkedin size={18} />
+            LinkedIn
+          </a>
+          <a
+            href="https://github.com/joeldeva"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-bold text-white transition-colors hover:border-purple-400/50 hover:bg-purple-500/10"
+          >
+            <Github size={18} />
+            GitHub
+          </a>
+        </div>
       </div>
     </section>
   );
