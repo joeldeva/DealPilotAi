@@ -1,11 +1,14 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   BarChart3,
   CheckCircle2,
   Clock3,
+  CreditCard,
   ExternalLink,
   Github,
   History,
@@ -20,6 +23,7 @@ import {
 } from "lucide-react";
 import { SearchForm } from "../components/SearchForm";
 import { runFullDemo } from "../lib/api";
+import { FREE_SCAN_LIMIT, readPaidAccess, readScanUsage, writeScanUsage } from "../lib/billing";
 import type { FullRunResponse, RankedDeal } from "../lib/types";
 
 const demoGoals = [
@@ -54,12 +58,15 @@ const workflowSteps = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const [goal, setGoal] = useState(demoGoals[0]);
   const [result, setResult] = useState<FullRunResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeScanMode, setActiveScanMode] = useState<"standard" | "deep_scan">("standard");
   const [error, setError] = useState<string | null>(null);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [scansUsed, setScansUsed] = useState(0);
+  const [paidPlan, setPaidPlan] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -71,14 +78,24 @@ export default function Home() {
     } catch {
       setSearchHistory([]);
     }
+    setScansUsed(readScanUsage());
+    setPaidPlan(readPaidAccess()?.plan ?? null);
   }, []);
 
   const topDeal = useMemo(() => result?.best_recommendation ?? result?.ranked_results?.[0] ?? null, [result]);
   const rankedResults = result?.ranked_results ?? [];
+  const scansRemaining = Math.max(0, FREE_SCAN_LIMIT - scansUsed);
+  const hasPaidAccess = Boolean(paidPlan);
 
   async function handleRun(nextGoal = goal, scanMode: "standard" | "deep_scan" = "standard") {
     const trimmedGoal = nextGoal.trim();
     if (!trimmedGoal) return;
+
+    if (!hasPaidAccess && scansUsed >= FREE_SCAN_LIMIT) {
+      setError("Your 3 free scans are complete. Choose a plan to continue scanning live marketplace deals.");
+      router.push("/payment");
+      return;
+    }
 
     setGoal(trimmedGoal);
     setActiveScanMode(scanMode);
@@ -98,11 +115,21 @@ export default function Home() {
       });
       setResult(response);
       saveSearchHistory(trimmedGoal, response);
+      recordScanUsage();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Agent run failed. Check the backend URL and try again.");
     } finally {
       setLoading(false);
     }
+  }
+
+  function recordScanUsage() {
+    if (hasPaidAccess) return;
+    setScansUsed((current) => {
+      const next = Math.min(FREE_SCAN_LIMIT, current + 1);
+      writeScanUsage(next);
+      return next;
+    });
   }
 
   function saveSearchHistory(searchGoal: string, response: FullRunResponse) {
@@ -156,9 +183,18 @@ export default function Home() {
                 <p className="mt-1 text-sm text-slate-400">Buyer-side commerce agent</p>
               </div>
             </div>
-            <span className="rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-xs font-bold tracking-wider text-purple-200">
-              Autonomous Agent
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="hidden rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-xs font-bold tracking-wider text-purple-200 sm:inline-flex">
+                {hasPaidAccess ? `${paidPlan} access` : `${scansRemaining}/${FREE_SCAN_LIMIT} free scans left`}
+              </span>
+              <Link
+                href="/payment"
+                className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-xs font-bold tracking-wider text-purple-200 transition-colors hover:bg-purple-500/20"
+              >
+                <CreditCard size={14} />
+                Pricing
+              </Link>
+            </div>
           </nav>
 
           <section className="mx-auto max-w-4xl text-center">
@@ -180,6 +216,7 @@ export default function Home() {
             onDeepScan={() => handleRun(goal, "deep_scan")}
             onQuickRun={(quickGoal) => handleRun(quickGoal, "standard")}
           />
+          <TrialStatus scansRemaining={scansRemaining} hasPaidAccess={hasPaidAccess} paidPlan={paidPlan} />
         </section>
 
         {error ? (
@@ -236,6 +273,36 @@ export default function Home() {
         <AboutProject />
       </div>
     </main>
+  );
+}
+
+function TrialStatus({
+  scansRemaining,
+  hasPaidAccess,
+  paidPlan,
+}: {
+  scansRemaining: number;
+  hasPaidAccess: boolean;
+  paidPlan: string | null;
+}) {
+  return (
+    <div className="mx-auto mt-4 flex max-w-4xl flex-col items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-slate-300 sm:flex-row">
+      <span>
+        {hasPaidAccess ? (
+          <>
+            <strong className="text-emerald-300">{paidPlan}</strong> plan active. DealPilot scans are unlocked on this browser.
+          </>
+        ) : (
+          <>
+            <strong className="text-purple-300">{scansRemaining}</strong> free scan{scansRemaining === 1 ? "" : "s"} remaining before checkout.
+          </>
+        )}
+      </span>
+      <Link href="/payment" className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-4 py-2 text-xs font-bold text-purple-100 transition-colors hover:bg-purple-500/20">
+        <CreditCard size={14} />
+        {hasPaidAccess ? "Manage plan" : "See pricing"}
+      </Link>
+    </div>
   );
 }
 
