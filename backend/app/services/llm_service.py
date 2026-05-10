@@ -138,7 +138,7 @@ class LLMService:
     def _call_gemini(self, prompt: str) -> str:
         url = (
             "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"{self.settings.gemini_model}:generateContent?key={self.settings.gemini_api_key}"
+            f"{self.settings.gemini_model}:generateContent"
         )
         payload: dict[str, Any] = {
             "contents": [
@@ -158,7 +158,10 @@ class LLMService:
         request = Request(
             url,
             data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": self.settings.gemini_api_key or "",
+            },
             method="POST",
         )
         with urlopen(request, timeout=self.settings.gemini_timeout_seconds) as response:
