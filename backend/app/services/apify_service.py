@@ -5,6 +5,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from app.config import get_settings
 from app.models.listing import Listing
@@ -376,7 +377,20 @@ class ApifyService:
         description = str(self._first(item, "description", "text", "snippet") or "")
         price = self._parse_price(self._first(item, "price", "amount") or description)
         title = str(self._first(item, "title", "name") or "Marketplace listing")
-        listing_url = str(self._first(item, "url", "link", "listingUrl", "displayedUrl") or "https://example.invalid/apify/listing")
+        listing_url = self._normalize_listing_url(
+            self._first(
+                item,
+                "url",
+                "link",
+                "listingUrl",
+                "listing_url",
+                "productUrl",
+                "product_url",
+                "sourceUrl",
+                "source_url",
+                "displayedUrl",
+            )
+        )
         seller = self._first(item, "seller", "sellerName")
         seller_name = seller.get("name") if isinstance(seller, dict) else seller
         image_url = str(self._first(item, "image", "imageUrl", "thumbnail") or f"gradient://{product_key}-apify")
@@ -400,6 +414,28 @@ class ApifyService:
             data_source="apify_live",
             product_key=product_key,
         )
+
+    def _normalize_listing_url(self, value: Any) -> str:
+        text = str(value or "").strip()
+        if not text:
+            return "#"
+        if text.startswith("//"):
+            text = f"https:{text}"
+        elif text.startswith("www."):
+            text = f"https://{text}"
+        elif not re.match(r"^https?://", text, flags=re.IGNORECASE):
+            # Google-style displayed URLs can arrive as "olx.in/item/..."
+            # or "example.com > category". Convert likely domains only.
+            candidate = text.split()[0].split(">")[0].strip().rstrip("/")
+            if "." in candidate and " " not in candidate:
+                text = f"https://{candidate}"
+            else:
+                return "#"
+
+        parsed = urlparse(text)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            return "#"
+        return text
 
     def _first(self, item: dict[str, Any], *keys: str) -> Any:
         for key in keys:

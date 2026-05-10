@@ -9,8 +9,8 @@ type DealCardProps = {
 
 export function DealCard({ deal }: DealCardProps) {
   const { listing, deal_analysis, risk_analysis, ranking, negotiation } = deal;
-  const listingHref = listing.listing_url?.trim();
-  const canOpenListing = Boolean(listingHref && listingHref !== "#");
+  const listingHref = normalizeHref(listing.listing_url);
+  const canOpenListing = Boolean(listingHref);
 
   return (
     <article className="glass-panel rounded p-4">
@@ -156,6 +156,17 @@ function formatInr(value: number) {
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function normalizeHref(value: string) {
+  const raw = value?.trim();
+  if (!raw || raw === "#" || raw.includes("example.invalid")) return "";
+  if (raw.startsWith("//")) return `https:${raw}`;
+  if (raw.startsWith("www.")) return `https://${raw}`;
+  if (/^https?:\/\//i.test(raw)) return raw;
+  const candidate = raw.split(/\s|>/)[0]?.trim().replace(/\/$/, "");
+  if (candidate?.includes(".") && !candidate.includes(" ")) return `https://${candidate}`;
+  return "";
 }
 
 function gradientClass(imageUrl: string) {
