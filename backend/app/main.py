@@ -13,6 +13,10 @@ from app.services.superplane_service import SuperplaneService
 from app.services.zynd_service import ZyndService
 from app.services.workflow_events import clear_events, get_events, get_superplane_status
 
+import secrets
+from fastapi import Depends, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+
 
 settings = get_settings()
 mock_data_service = MockDataService()
@@ -22,7 +26,20 @@ llm_service = LLMService()
 storage_service = StorageService()
 superplane_service = SuperplaneService()
 
-app = FastAPI(title="DealPilot AI", version="0.1.0")
+security = HTTPBasic()
+
+def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
+    correct_username = secrets.compare_digest(credentials.username, settings.dealpilot_admin_username)
+    correct_password = secrets.compare_digest(credentials.password, settings.dealpilot_admin_password)
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credentials.username
+
+app = FastAPI(title="DealPilot AI", version="0.1.0", dependencies=[Depends(verify_credentials)])
 
 
 def _cors_origins() -> list[str]:

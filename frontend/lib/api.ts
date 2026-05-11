@@ -2,12 +2,21 @@ import type { DealReportListResponse, FullRunRequest, FullRunResponse, HostedSta
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+const AUTH_HEADER = "Basic " + (typeof btoa !== "undefined" ? btoa("admin:secret") : Buffer.from("admin:secret").toString("base64"));
+
+function getHeaders(extraHeaders: Record<string, string> = {}) {
+  return {
+    "Authorization": AUTH_HEADER,
+    ...extraHeaders,
+  };
+}
+
 export async function runFullDemo(request: FullRunRequest): Promise<FullRunResponse> {
   const response = await fetch(`${API_BASE_URL}/api/demo/full-run`, {
     method: "POST",
-    headers: {
+    headers: getHeaders({
       "Content-Type": "application/json",
-    },
+    }),
     body: JSON.stringify({
       user_goal: request.user_goal,
       use_live_apify: request.use_live_apify,
@@ -28,7 +37,9 @@ export async function runFullDemo(request: FullRunRequest): Promise<FullRunRespo
 }
 
 export async function fetchReports(limit = 6): Promise<DealReportListResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/reports?limit=${limit}`);
+  const response = await fetch(`${API_BASE_URL}/api/reports?limit=${limit}`, {
+    headers: getHeaders(),
+  });
 
   if (!response.ok) {
     throw new Error(`Backend returned ${response.status}`);
@@ -38,7 +49,9 @@ export async function fetchReports(limit = 6): Promise<DealReportListResponse> {
 }
 
 export async function fetchSuperplaneCanvas(): Promise<SuperplaneCanvas> {
-  const response = await fetch(`${API_BASE_URL}/api/superplane/canvas`);
+  const response = await fetch(`${API_BASE_URL}/api/superplane/canvas`, {
+    headers: getHeaders(),
+  });
 
   if (!response.ok) {
     throw new Error(`Backend returned ${response.status}`);
@@ -49,12 +62,12 @@ export async function fetchSuperplaneCanvas(): Promise<SuperplaneCanvas> {
 
 export async function fetchHostedStatus(): Promise<HostedStatus> {
   const [health, apify, gemini, zynd, superplane, canvas] = await Promise.all([
-    fetch(`${API_BASE_URL}/health`),
-    fetch(`${API_BASE_URL}/api/apify/status`),
-    fetch(`${API_BASE_URL}/api/gemini/status`),
-    fetch(`${API_BASE_URL}/api/zynd/status`),
-    fetch(`${API_BASE_URL}/api/superplane/status`),
-    fetch(`${API_BASE_URL}/api/superplane/canvas`),
+    fetch(`${API_BASE_URL}/health`, { headers: getHeaders() }),
+    fetch(`${API_BASE_URL}/api/apify/status`, { headers: getHeaders() }),
+    fetch(`${API_BASE_URL}/api/gemini/status`, { headers: getHeaders() }),
+    fetch(`${API_BASE_URL}/api/zynd/status`, { headers: getHeaders() }),
+    fetch(`${API_BASE_URL}/api/superplane/status`, { headers: getHeaders() }),
+    fetch(`${API_BASE_URL}/api/superplane/canvas`, { headers: getHeaders() }),
   ]);
 
   const responses = [health, apify, gemini, zynd, superplane, canvas];

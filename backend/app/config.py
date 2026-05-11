@@ -34,6 +34,9 @@ class Settings(BaseModel):
     zynd_developer_keypair_path: str | None = None
     superplane_enabled: bool = False
     workflow_events_enabled: bool = True
+    dealpilot_admin_username: str = "admin"
+    dealpilot_admin_password: str = "secret"
+    dealpilot_encryption_key: str = "dealpilot-secret-vault-key-32bytes-min!"
 
 
 def _env_bool(name: str, default: bool = False) -> bool:
@@ -105,4 +108,7 @@ def get_settings() -> Settings:
         zynd_developer_keypair_path=os.getenv("ZYND_DEVELOPER_KEYPAIR_PATH") or None,
         superplane_enabled=_env_bool("SUPERPLANE_ENABLED", False),
         workflow_events_enabled=_env_bool("WORKFLOW_EVENTS_ENABLED", True),
+        dealpilot_admin_username=os.getenv("DEALPILOT_ADMIN_USERNAME", "admin"),
+        dealpilot_admin_password=os.getenv("DEALPILOT_ADMIN_PASSWORD", "secret"),
+        dealpilot_encryption_key=os.getenv("DEALPILOT_ENCRYPTION_KEY", "dealpilot-secret-vault-key-32bytes-min!"),
     )

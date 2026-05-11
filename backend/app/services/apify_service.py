@@ -39,6 +39,15 @@ class ApifyService:
         self.settings = get_settings()
         self.mock_data_service = mock_data_service or MockDataService()
 
+    def _redact_pii(self, text: str) -> str:
+        if not text:
+            return text
+        # Redact phone numbers
+        text = re.sub(r'(?:\+?\d[\d\-\s]{7,14}\d)', '[REDACTED PHONE]', text)
+        # Redact emails
+        text = re.sub(r'[\w\.-]+@[\w\.-]+\.\w+', '[REDACTED EMAIL]', text)
+        return text
+
     def search_marketplace_listings(
         self,
         query: str,
@@ -637,6 +646,7 @@ class ApifyService:
             # ecomscrape/olx fields
             "name",
         ) or "")
+        description = self._redact_pii(description)
         price = self._parse_price(
             self._first(
                 item,
@@ -680,6 +690,7 @@ class ApifyService:
         )
         seller = self._first(item, "seller", "sellerName", "sellerInfo", "seller_name", "user", "brand")
         seller_name = seller.get("name") if isinstance(seller, dict) else seller
+        seller_name = self._redact_pii(str(seller_name or "Marketplace seller"))
         image_url = self._normalize_image_url(self._first(
             item,
             "image", "imageUrl", "thumbnail", "photo", "picture", "images", "imageUrls",
@@ -692,11 +703,13 @@ class ApifyService:
         ))
         image_url = image_url or f"gradient://{product_key}-apify"
         location = self._normalize_location(self._first(item, "location", "city", "itemLocation", "sellerLocation", "area", "region"))
+        location = self._redact_pii(location)
         # For eBay/Amazon where location may be in card_attribute list
         if location == "Unknown location" and isinstance(item.get("card_attribute"), list):
             for attr in item["card_attribute"]:
                 if isinstance(attr, str) and "Located in" in attr:
                     location = attr.replace("Located in ", "").strip()
+                    location = self._redact_pii(location)
                     break
         description = description or title
         currency = self._currency_from_item(item) or ("USD" if source == "ebay" else "INR")

@@ -5,8 +5,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
+from cryptography.fernet import Fernet
+import base64
 
 from app.models.api import DealReportSummary, FullRunResponse
+from app.config import get_settings
 
 
 def _runtime_data_dir() -> Path:
@@ -32,6 +35,9 @@ class StorageService:
 
     def __init__(self, db_path: Path = DB_PATH) -> None:
         self.db_path = db_path
+        settings = get_settings()
+        _key = base64.urlsafe_b64encode(settings.dealpilot_encryption_key.encode()[:32].ljust(32, b'x'))
+        self.fernet = Fernet(_key)
         self._ensure_schema()
 
     def save_report(self, response: FullRunResponse) -> dict[str, str]:
@@ -39,6 +45,7 @@ class StorageService:
         created_at = response.saved_at or datetime.now(timezone.utc).isoformat()
         stored_response = response.model_copy(update={"report_id": report_id, "saved_at": created_at})
         payload = stored_response.model_dump(mode="json")
+        encrypted_payload = self.fernet.encrypt(json.dumps(payload).encode()).decode()
 
         best = response.best_recommendation
         with self._connect() as connection:
@@ -76,7 +83,7 @@ class StorageService:
                     best.risk_analysis.risk_level if best else None,
                     int(response.credit_safety.apify_called),
                     int(response.credit_safety.llm_called),
-                    json.dumps(payload),
+                    encrypted_payload,
                 ),
             )
         return {"report_id": report_id, "created_at": created_at}
@@ -134,7 +141,11 @@ class StorageService:
             ).fetchone()
         if row is None:
             return None
-        return json.loads(row["payload_json"])
+        try:
+            decrypted = self.fernet.decrypt(row["payload_json"].encode()).decode()
+            return json.loads(decrypted)
+        except Exception:
+            return json.loads(row["payload_json"])
 
     def delete_report(self, report_id: str) -> bool:
         with self._connect() as connection:
